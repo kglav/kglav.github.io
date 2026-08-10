@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Keith & Jah's Family Calendar</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;--panel:rgba(255,255,255,.88);--text:#1f2430;--muted:#697184;--line:#e7e9f0;
+      --shadow:0 14px 40px rgba(31,36,48,.09);--keith:#6f8df6;--keith-soft:#eef2ff;--jah:#c57ce6;
+      --jah-soft:#f8effc;--angela:#f3a85c;--angela-soft:#fff4e8;--other:#55b89c;--other-soft:#eaf8f3;
+      --radius-xl:28px;--radius-lg:20px;--radius-md:14px
+    }
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);background:radial-gradient(circle at 8% 10%,rgba(111,141,246,.15),transparent 24%),radial-gradient(circle at 92% 8%,rgba(197,124,230,.14),transparent 24%),radial-gradient(circle at 90% 90%,rgba(85,184,156,.12),transparent 22%),var(--bg);padding:28px}
+    button,input,select,textarea{font:inherit}.shell{width:min(1500px,100%);margin:auto}.panel,.hero{background:var(--panel);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.85);box-shadow:var(--shadow);border-radius:var(--radius-xl)}
+    .hero{padding:28px 30px;margin-bottom:22px;display:flex;justify-content:space-between;gap:24px;align-items:flex-end;position:relative;overflow:hidden}.hero:after{content:"";position:absolute;width:220px;height:220px;right:-70px;top:-90px;border-radius:50%;background:linear-gradient(135deg,rgba(111,141,246,.18),rgba(197,124,230,.18))}.eyebrow{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}h1{font-size:clamp(34px,5vw,60px);line-height:1;margin:7px 0 10px;letter-spacing:-.04em}.subtitle{margin:0;color:var(--muted);font-size:17px}.back{position:relative;z-index:2;display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--muted);background:#fff;padding:10px 14px;border-radius:999px;font-weight:800;box-shadow:inset 0 0 0 1px var(--line);transition:.2s}.back:hover{transform:translateY(-2px);color:var(--text)}
+    .panel{padding:22px;margin-bottom:22px}.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}.toolbar-left,.toolbar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.btn,.select{border:0;border-radius:13px;background:#f0f2f7;color:var(--muted);font-weight:800;padding:11px 14px;cursor:pointer;transition:.2s}.btn:hover{transform:translateY(-2px)}.btn.primary{background:var(--text);color:#fff;box-shadow:0 8px 20px rgba(31,36,48,.16)}.select{appearance:auto}.week-title{text-align:center;margin:18px 0 4px}.week-title h2{font-size:27px;margin:0;letter-spacing:-.02em}.week-title p{margin:4px 0 0;color:var(--muted)}
+    .week-grid{display:grid;grid-template-columns:repeat(7,minmax(160px,1fr));gap:12px;overflow-x:auto;padding:2px 2px 8px}.day{min-height:390px;background:rgba(255,255,255,.72);border:1px solid var(--line);border-radius:20px;padding:14px;transition:.2s}.day.today{box-shadow:inset 0 0 0 2px var(--text)}.day-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px}.dow{font-weight:900}.date{font-size:12px;color:var(--muted);font-weight:700}.day-add{border:0;background:#eef0f5;width:31px;height:31px;border-radius:10px;cursor:pointer;font-weight:900;color:var(--muted);transition:.2s}.day-add:hover{transform:scale(1.07);background:#fff}.entries{display:grid;gap:9px}.empty{border:1px dashed #d9dde7;color:#9299a8;border-radius:14px;padding:16px 10px;text-align:center;font-size:12px}.entry{border-radius:14px;padding:11px 12px;cursor:pointer;transition:.2s;border:1px solid transparent}.entry:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(31,36,48,.08)}.entry.keith{background:var(--keith-soft);border-color:rgba(111,141,246,.14)}.entry.jah{background:var(--jah-soft);border-color:rgba(197,124,230,.14)}.entry.angela{background:var(--angela-soft);border-color:rgba(243,168,92,.18)}.entry.other{background:var(--other-soft);border-color:rgba(85,184,156,.18)}.entry-title{font-weight:850;font-size:14px;line-height:1.25}.entry-meta{font-size:11px;color:var(--muted);margin-top:6px;display:flex;flex-wrap:wrap;gap:5px}.pill{background:rgba(255,255,255,.65);padding:3px 7px;border-radius:999px}
+    .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px;justify-content:center}.legend span{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:12px;font-weight:750}.dot{width:9px;height:9px;border-radius:50%}.dot.k{background:var(--keith)}.dot.j{background:var(--jah)}.dot.a{background:var(--angela)}.dot.o{background:var(--other)}
+    .note{margin:14px 0 0;color:var(--muted);font-size:12px;text-align:center}.modal-wrap{position:fixed;inset:0;background:rgba(24,28,38,.34);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}.modal-wrap.open{display:flex}.modal{width:min(560px,100%);background:#fff;border-radius:26px;box-shadow:0 24px 70px rgba(31,36,48,.22);padding:24px;animation:pop .18s ease}.modal h3{margin:0 0 4px;font-size:24px}.modal-sub{margin:0 0 18px;color:var(--muted)}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:grid;gap:7px}.field.full{grid-column:1/-1}.field label{font-size:12px;font-weight:850;color:var(--muted)}input,select,textarea{width:100%;border:1px solid var(--line);border-radius:13px;padding:11px 12px;background:#fafbfc;color:var(--text);outline:none}textarea{min-height:92px;resize:vertical}input:focus,select:focus,textarea:focus{border-color:#aeb9dd;box-shadow:0 0 0 3px rgba(111,141,246,.10)}.modal-actions{display:flex;justify-content:space-between;gap:10px;margin-top:18px}.actions-right{display:flex;gap:8px}.danger{background:#fff0f0;color:#bf5f5f}.hidden{display:none!important}@keyframes pop{from{opacity:0;transform:scale(.97) translateY(8px)}to{opacity:1;transform:none}}
+    @media(max-width:900px){body{padding:16px}.hero{align-items:flex-start;flex-direction:column}.week-grid{grid-template-columns:repeat(7,220px)}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+    @media(max-width:520px){.panel,.hero{border-radius:22px}.toolbar{align-items:stretch}.toolbar-left,.toolbar-right{width:100%}.toolbar-right .select{flex:1}.btn{padding:10px 12px}.week-grid{grid-template-columns:repeat(7,82vw)}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Family planner · 2026–2027</div>
+        <h1>Family Calendar</h1>
+        <p class="subtitle">A flexible weekly space for plans, appointments and life admin.</p>
+      </div>
+      <a class="back" href="index.html">← Back to timetable</a>
+    </section>
+
+    <section class="panel">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="btn" id="prevWeek">← Previous</button>
+          <button class="btn primary" id="thisWeek">This week</button>
+          <button class="btn" id="nextWeek">Next →</button>
+        </div>
+        <div class="toolbar-right">
+          <label class="eyebrow" for="yearSelect" style="margin:0">Jump to</label>
+          <select class="select" id="yearSelect"><option value="2026">2026</option><option value="2027">2027</option></select>
+          <select class="select" id="weekSelect" aria-label="Week number"></select>
+        </div>
+      </div>
+      <div class="week-title"><h2 id="weekHeading"></h2><p id="weekRange"></p></div>
+      <div class="legend"><span><i class="dot k"></i>Keith</span><span><i class="dot j"></i>Jah</span><span><i class="dot a"></i>Angela</span><span><i class="dot o"></i>Other</span></div>
+    </section>
+
+    <section class="panel">
+      <div class="week-grid" id="weekGrid"></div>
+      <p class="note">Changes are available for this browser session only and reset when the page is refreshed.</p>
+    </section>
+  </main>
+
+  <div class="modal-wrap" id="modalWrap" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <h3 id="modalTitle">Add calendar item</h3>
+      <p class="modal-sub" id="modalDate"></p>
+      <form id="entryForm">
+        <div class="form-grid">
+          <div class="field full"><label for="title">Line item</label><input id="title" required placeholder="e.g. Dentist, dinner, nursery event" /></div>
+          <div class="field"><label for="appliesTo">Applies to</label><select id="appliesTo"><option>Keith</option><option>Jah</option><option>Angela</option><option>Other</option></select></div>
+          <div class="field"><label for="writtenBy">Written by</label><select id="writtenBy"><option>Keith</option><option>Jah</option></select></div>
+          <div class="field full hidden" id="otherField"><label for="otherName">Who / what does “Other” mean?</label><input id="otherName" placeholder="e.g. Both of us, Family, Yiayia" /></div>
+          <div class="field"><label for="time">Time (optional)</label><input id="time" type="time" /></div>
+          <div class="field"><label for="dateInput">Date</label><input id="dateInput" type="date" min="2026-01-01" max="2027-12-31" required /></div>
+          <div class="field full"><label for="notes">Notes (optional)</label><textarea id="notes" placeholder="Any extra detail..."></textarea></div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn danger hidden" id="deleteBtn">Delete</button>
+          <div class="actions-right"><button type="button" class="btn" id="cancelBtn">Cancel</button><button type="submit" class="btn primary">Save item</button></div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<script>
+  const MS_DAY = 86400000;
+  const entries = [];
+  let editId = null;
+  const today = new Date();
+  const initial = (today.getFullYear() >= 2026 && today.getFullYear() <= 2027) ? today : new Date(2026,0,5);
+  let weekStart = startOfWeek(initial);
+
+  const grid = document.getElementById('weekGrid');
+  const modalWrap = document.getElementById('modalWrap');
+  const form = document.getElementById('entryForm');
+  const appliesTo = document.getElementById('appliesTo');
+  const otherField = document.getElementById('otherField');
+  const deleteBtn = document.getElementById('deleteBtn');
+  const yearSelect = document.getElementById('yearSelect');
+  const weekSelect = document.getElementById('weekSelect');
+
+  function startOfWeek(date){const d=new Date(date.getFullYear(),date.getMonth(),date.getDate());const day=d.getDay()||7;d.setDate(d.getDate()-day+1);return d}
+  function addDays(date,n){const d=new Date(date);d.setDate(d.getDate()+n);return d}
+  function isoDate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+  function fmt(d,opts){return new Intl.DateTimeFormat('en-GB',opts).format(d)}
+  function isoWeek(date){const d=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()));const day=d.getUTCDay()||7;d.setUTCDate(d.getUTCDate()+4-day);const y0=new Date(Date.UTC(d.getUTCFullYear(),0,1));return Math.ceil((((d-y0)/MS_DAY)+1)/7)}
+  function weeksInYear(y){const d=new Date(y,11,28);return isoWeek(d)}
+  function mondayOfISOWeek(year,week){const jan4=new Date(year,0,4);const mon=startOfWeek(jan4);return addDays(mon,(week-1)*7)}
+  function inRange(d){const s=isoDate(d);return s>='2026-01-01'&&s<='2027-12-31'}
+  function personClass(person){return person==='Keith'?'keith':person==='Jah'?'jah':person==='Angela'?'angela':'other'}
+  function displayPerson(e){return e.appliesTo==='Other'?(e.otherName||'Other'):e.appliesTo}
+
+  function populateWeeks(){const y=Number(yearSelect.value);const count=weeksInYear(y);const current=Number(weekSelect.value)||1;weekSelect.innerHTML=Array.from({length:count},(_,i)=>`<option value="${i+1}">Week ${i+1}</option>`).join('');weekSelect.value=String(Math.min(current,count))}
+
+  function render(){
+    const end=addDays(weekStart,6), week=isoWeek(weekStart), yr=addDays(weekStart,3).getFullYear();
+    document.getElementById('weekHeading').textContent=`Week ${week} · ${yr}`;
+    document.getElementById('weekRange').textContent=`${fmt(weekStart,{day:'numeric',month:'long'})} – ${fmt(end,{day:'numeric',month:'long',year:'numeric'})}`;
+    yearSelect.value=String(Math.min(2027,Math.max(2026,yr)));populateWeeks();weekSelect.value=String(Math.min(weeksInYear(Number(yearSelect.value)),week));
+    grid.innerHTML=Array.from({length:7},(_,i)=>{
+      const d=addDays(weekStart,i), key=isoDate(d), items=entries.filter(e=>e.date===key).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+      const isToday=isoDate(d)===isoDate(today);const disabled=!inRange(d);
+      return `<article class="day ${isToday?'today':''}" style="${disabled?'opacity:.48':''}"><div class="day-head"><div><div class="dow">${fmt(d,{weekday:'short'})}</div><div class="date">${fmt(d,{day:'numeric',month:'short'})}${isToday?' · Today':''}</div></div>${disabled?'':`<button class="day-add" data-add="${key}" title="Add item">+</button>`}</div><div class="entries">${items.length?items.map(e=>`<div class="entry ${personClass(e.appliesTo)}" data-id="${e.id}"><div class="entry-title">${escapeHtml(e.title)}</div><div class="entry-meta">${e.time?`<span class="pill">${e.time}</span>`:''}<span class="pill">${escapeHtml(displayPerson(e))}</span><span class="pill">by ${e.writtenBy}</span></div>${e.notes?`<div class="entry-meta" style="margin-top:8px">${escapeHtml(e.notes)}</div>`:''}</div>`).join(''):`<div class="empty">No items</div>`}</div></article>`
+    }).join('');
+    grid.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>openModal(b.dataset.add));
+    grid.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>openModal(null,Number(b.dataset.id)));
+  }
+  function escapeHtml(s=''){return s.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+  function openModal(date,id=null){
+    editId=id;form.reset();appliesTo.value='Keith';document.getElementById('writtenBy').value='Keith';otherField.classList.add('hidden');deleteBtn.classList.toggle('hidden',id===null);
+    if(id!==null){const e=entries.find(x=>x.id===id);document.getElementById('modalTitle').textContent='Edit calendar item';document.getElementById('title').value=e.title;appliesTo.value=e.appliesTo;document.getElementById('writtenBy').value=e.writtenBy;document.getElementById('otherName').value=e.otherName||'';document.getElementById('time').value=e.time||'';document.getElementById('dateInput').value=e.date;document.getElementById('notes').value=e.notes||'';date=e.date;toggleOther()}else{document.getElementById('modalTitle').textContent='Add calendar item';document.getElementById('dateInput').value=date}
+    document.getElementById('modalDate').textContent=fmt(new Date(date+'T12:00:00'),{weekday:'long',day:'numeric',month:'long',year:'numeric'});modalWrap.classList.add('open');setTimeout(()=>document.getElementById('title').focus(),40)
+  }
+  function closeModal(){modalWrap.classList.remove('open');editId=null}
+  function toggleOther(){otherField.classList.toggle('hidden',appliesTo.value!=='Other')}
+  appliesTo.onchange=toggleOther;document.getElementById('cancelBtn').onclick=closeModal;modalWrap.onclick=e=>{if(e.target===modalWrap)closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+  form.onsubmit=e=>{e.preventDefault();const item={id:editId??Date.now(),title:document.getElementById('title').value.trim(),appliesTo:appliesTo.value,otherName:document.getElementById('otherName').value.trim(),writtenBy:document.getElementById('writtenBy').value,time:document.getElementById('time').value,date:document.getElementById('dateInput').value,notes:document.getElementById('notes').value.trim()};if(item.appliesTo==='Other'&&!item.otherName){document.getElementById('otherName').focus();return}if(editId===null)entries.push(item);else Object.assign(entries.find(x=>x.id===editId),item);weekStart=startOfWeek(new Date(item.date+'T12:00:00'));closeModal();render()};
+  deleteBtn.onclick=()=>{if(editId!==null){const i=entries.findIndex(x=>x.id===editId);if(i>=0)entries.splice(i,1);closeModal();render()}};
+  document.getElementById('prevWeek').onclick=()=>{const n=addDays(weekStart,-7);if(addDays(n,6)>=new Date(2026,0,1)){weekStart=n;render()}};
+  document.getElementById('nextWeek').onclick=()=>{const n=addDays(weekStart,7);if(n<=new Date(2027,11,31)){weekStart=n;render()}};
+  document.getElementById('thisWeek').onclick=()=>{weekStart=startOfWeek(initial);render()};
+  yearSelect.onchange=()=>{populateWeeks();weekStart=mondayOfISOWeek(Number(yearSelect.value),Number(weekSelect.value)||1);render()};
+  weekSelect.onchange=()=>{weekStart=mondayOfISOWeek(Number(yearSelect.value),Number(weekSelect.value));render()};
+  yearSelect.value=String(Math.min(2027,Math.max(2026,addDays(weekStart,3).getFullYear())));populateWeeks();render();
+</script>
+</body>
+</html>
