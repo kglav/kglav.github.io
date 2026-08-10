@@ -43,7 +43,7 @@
         <div class="toolbar-right">
           <label class="eyebrow" for="yearSelect" style="margin:0">Jump to</label>
           <select class="select" id="yearSelect"><option value="2026">2026</option><option value="2027">2027</option></select>
-          <select class="select" id="weekSelect" aria-label="Week number"></select>
+          <select class="select" id="weekSelect" aria-label="Week date range"></select>
         </div>
       </div>
       <div class="week-title"><h2 id="weekHeading"></h2><p id="weekRange"></p></div>
@@ -52,7 +52,7 @@
 
     <section class="panel">
       <div class="week-grid" id="weekGrid"></div>
-      <p class="note">Changes are available for this browser session only and reset when the page is refreshed.</p>
+      <p class="note">Entries are saved to Supabase and shared across devices using this family calendar.</p>
     </section>
   </main>
 
@@ -78,10 +78,13 @@
     </div>
   </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <script>
   const MS_DAY = 86400000;
-  const entries = [];
+  let entries = [];
   let editId = null;
+  let db = null;
   const today = new Date();
   const initial = (today.getFullYear() >= 2026 && today.getFullYear() <= 2027) ? today : new Date(2026,0,5);
   let weekStart = startOfWeek(initial);
@@ -100,44 +103,162 @@
   function isoDate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
   function fmt(d,opts){return new Intl.DateTimeFormat('en-GB',opts).format(d)}
   function isoWeek(date){const d=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()));const day=d.getUTCDay()||7;d.setUTCDate(d.getUTCDate()+4-day);const y0=new Date(Date.UTC(d.getUTCFullYear(),0,1));return Math.ceil((((d-y0)/MS_DAY)+1)/7)}
+  function isoWeekYear(date){const d=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()));const day=d.getUTCDay()||7;d.setUTCDate(d.getUTCDate()+4-day);return d.getUTCFullYear()}
   function weeksInYear(y){const d=new Date(y,11,28);return isoWeek(d)}
   function mondayOfISOWeek(year,week){const jan4=new Date(year,0,4);const mon=startOfWeek(jan4);return addDays(mon,(week-1)*7)}
   function inRange(d){const s=isoDate(d);return s>='2026-01-01'&&s<='2027-12-31'}
   function personClass(person){return person==='Keith'?'keith':person==='Jah'?'jah':person==='Angela'?'angela':'other'}
   function displayPerson(e){return e.appliesTo==='Other'?(e.otherName||'Other'):e.appliesTo}
+  function escapeHtml(s=''){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 
-  function populateWeeks(){const y=Number(yearSelect.value);const count=weeksInYear(y);const current=Number(weekSelect.value)||1;weekSelect.innerHTML=Array.from({length:count},(_,i)=>`<option value="${i+1}">Week ${i+1}</option>`).join('');weekSelect.value=String(Math.min(current,count))}
+  function weekRangeLabel(year, week){
+    const start=mondayOfISOWeek(year,week), end=addDays(start,6);
+    if(start.getFullYear()!==end.getFullYear()){
+      return `${fmt(start,{day:'numeric',month:'long',year:'numeric'})} – ${fmt(end,{day:'numeric',month:'long',year:'numeric'})}`;
+    }
+    if(start.getMonth()!==end.getMonth()){
+      return `${fmt(start,{day:'numeric',month:'long'})} – ${fmt(end,{day:'numeric',month:'long',year:'numeric'})}`;
+    }
+    return `${fmt(start,{day:'numeric',month:'long'})} – ${fmt(end,{day:'numeric',month:'long',year:'numeric'})}`;
+  }
+
+  function populateWeeks(){
+    const y=Number(yearSelect.value);
+    const count=weeksInYear(y);
+    const current=Number(weekSelect.value)||1;
+    weekSelect.innerHTML=Array.from({length:count},(_,i)=>{
+      const w=i+1;
+      return `<option value="${w}">${weekRangeLabel(y,w)}</option>`;
+    }).join('');
+    weekSelect.value=String(Math.min(current,count));
+  }
+
+  function initSupabase(){
+    const cfg=window.SUPABASE_CONFIG||{};
+    if(!cfg.url || !cfg.publishableKey || cfg.url.includes('YOUR_PROJECT') || cfg.publishableKey.includes('YOUR_PUBLISHABLE_KEY')){
+      throw new Error('Supabase is not configured yet. Open supabase-config.js and paste your Project URL and Publishable key.');
+    }
+    if(!window.supabase || !window.supabase.createClient){
+      throw new Error('The Supabase browser library could not be loaded. Check your internet connection.');
+    }
+    db=window.supabase.createClient(cfg.url,cfg.publishableKey,{
+      auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+    });
+  }
+
+  function fromDb(row){
+    return {
+      id:String(row.id), title:row.title, appliesTo:row.applies_to,
+      otherName:row.other_name||'', writtenBy:row.written_by,
+      time:row.event_time ? String(row.event_time).slice(0,5) : '',
+      date:row.event_date, notes:row.notes||''
+    };
+  }
+
+  function toDb(item){
+    return {
+      title:item.title,
+      applies_to:item.appliesTo,
+      other_name:item.appliesTo==='Other' ? (item.otherName||null) : null,
+      written_by:item.writtenBy,
+      event_time:item.time||null,
+      event_date:item.date,
+      notes:item.notes||null
+    };
+  }
+
+  async function loadEntries(){
+    try{
+      initSupabase();
+      const {data,error}=await db
+        .from('calendar_entries')
+        .select('id,title,applies_to,other_name,written_by,event_time,event_date,notes')
+        .gte('event_date','2026-01-01')
+        .lte('event_date','2027-12-31')
+        .order('event_date',{ascending:true})
+        .order('event_time',{ascending:true,nullsFirst:false});
+      if(error) throw error;
+      entries=(data||[]).map(fromDb);
+      render();
+    }catch(err){
+      grid.innerHTML=`<div class="empty" style="grid-column:1/-1;padding:30px"><strong>Could not connect to Supabase.</strong><br><br>${escapeHtml(err.message||String(err))}<br><br>Check <strong>supabase-config.js</strong> and make sure you have run <strong>supabase-setup.sql</strong> in the Supabase SQL Editor.</div>`;
+    }
+  }
 
   function render(){
-    const end=addDays(weekStart,6), week=isoWeek(weekStart), yr=addDays(weekStart,3).getFullYear();
+    const end=addDays(weekStart,6), week=isoWeek(weekStart), yr=isoWeekYear(weekStart);
     document.getElementById('weekHeading').textContent=`Week ${week} · ${yr}`;
-    document.getElementById('weekRange').textContent=`${fmt(weekStart,{day:'numeric',month:'long'})} – ${fmt(end,{day:'numeric',month:'long',year:'numeric'})}`;
-    yearSelect.value=String(Math.min(2027,Math.max(2026,yr)));populateWeeks();weekSelect.value=String(Math.min(weeksInYear(Number(yearSelect.value)),week));
+    document.getElementById('weekRange').textContent=weekRangeLabel(yr,week);
+    yearSelect.value=String(Math.min(2027,Math.max(2026,yr)));
+    populateWeeks();
+    weekSelect.value=String(Math.min(weeksInYear(Number(yearSelect.value)),week));
     grid.innerHTML=Array.from({length:7},(_,i)=>{
       const d=addDays(weekStart,i), key=isoDate(d), items=entries.filter(e=>e.date===key).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
       const isToday=isoDate(d)===isoDate(today);const disabled=!inRange(d);
-      return `<article class="day ${isToday?'today':''}" style="${disabled?'opacity:.48':''}"><div class="day-head"><div><div class="dow">${fmt(d,{weekday:'short'})}</div><div class="date">${fmt(d,{day:'numeric',month:'short'})}${isToday?' · Today':''}</div></div>${disabled?'':`<button class="day-add" data-add="${key}" title="Add item">+</button>`}</div><div class="entries">${items.length?items.map(e=>`<div class="entry ${personClass(e.appliesTo)}" data-id="${e.id}"><div class="entry-title">${escapeHtml(e.title)}</div><div class="entry-meta">${e.time?`<span class="pill">${e.time}</span>`:''}<span class="pill">${escapeHtml(displayPerson(e))}</span><span class="pill">by ${e.writtenBy}</span></div>${e.notes?`<div class="entry-meta" style="margin-top:8px">${escapeHtml(e.notes)}</div>`:''}</div>`).join(''):`<div class="empty">No items</div>`}</div></article>`
+      return `<article class="day ${isToday?'today':''}" style="${disabled?'opacity:.48':''}"><div class="day-head"><div><div class="dow">${fmt(d,{weekday:'short'})}</div><div class="date">${fmt(d,{day:'numeric',month:'short'})}${isToday?' · Today':''}</div></div>${disabled?'':`<button class="day-add" data-add="${key}" title="Add item">+</button>`}</div><div class="entries">${items.length?items.map(e=>`<div class="entry ${personClass(e.appliesTo)}" data-id="${e.id}"><div class="entry-title">${escapeHtml(e.title)}</div><div class="entry-meta">${e.time?`<span class="pill">${escapeHtml(e.time)}</span>`:''}<span class="pill">${escapeHtml(displayPerson(e))}</span><span class="pill">by ${escapeHtml(e.writtenBy)}</span></div>${e.notes?`<div class="entry-meta" style="margin-top:8px">${escapeHtml(e.notes)}</div>`:''}</div>`).join(''):`<div class="empty">No items</div>`}</div></article>`
     }).join('');
     grid.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>openModal(b.dataset.add));
-    grid.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>openModal(null,Number(b.dataset.id)));
+    grid.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>openModal(null,b.dataset.id));
   }
-  function escapeHtml(s=''){return s.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+
   function openModal(date,id=null){
     editId=id;form.reset();appliesTo.value='Keith';document.getElementById('writtenBy').value='Keith';otherField.classList.add('hidden');deleteBtn.classList.toggle('hidden',id===null);
-    if(id!==null){const e=entries.find(x=>x.id===id);document.getElementById('modalTitle').textContent='Edit calendar item';document.getElementById('title').value=e.title;appliesTo.value=e.appliesTo;document.getElementById('writtenBy').value=e.writtenBy;document.getElementById('otherName').value=e.otherName||'';document.getElementById('time').value=e.time||'';document.getElementById('dateInput').value=e.date;document.getElementById('notes').value=e.notes||'';date=e.date;toggleOther()}else{document.getElementById('modalTitle').textContent='Add calendar item';document.getElementById('dateInput').value=date}
+    if(id!==null){
+      const e=entries.find(x=>x.id===id); if(!e) return;
+      document.getElementById('modalTitle').textContent='Edit calendar item';document.getElementById('title').value=e.title;appliesTo.value=e.appliesTo;document.getElementById('writtenBy').value=e.writtenBy;document.getElementById('otherName').value=e.otherName||'';document.getElementById('time').value=e.time||'';document.getElementById('dateInput').value=e.date;document.getElementById('notes').value=e.notes||'';date=e.date;toggleOther();
+    }else{
+      document.getElementById('modalTitle').textContent='Add calendar item';document.getElementById('dateInput').value=date;
+    }
     document.getElementById('modalDate').textContent=fmt(new Date(date+'T12:00:00'),{weekday:'long',day:'numeric',month:'long',year:'numeric'});modalWrap.classList.add('open');setTimeout(()=>document.getElementById('title').focus(),40)
   }
   function closeModal(){modalWrap.classList.remove('open');editId=null}
   function toggleOther(){otherField.classList.toggle('hidden',appliesTo.value!=='Other')}
-  appliesTo.onchange=toggleOther;document.getElementById('cancelBtn').onclick=closeModal;modalWrap.onclick=e=>{if(e.target===modalWrap)closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
-  form.onsubmit=e=>{e.preventDefault();const item={id:editId??Date.now(),title:document.getElementById('title').value.trim(),appliesTo:appliesTo.value,otherName:document.getElementById('otherName').value.trim(),writtenBy:document.getElementById('writtenBy').value,time:document.getElementById('time').value,date:document.getElementById('dateInput').value,notes:document.getElementById('notes').value.trim()};if(item.appliesTo==='Other'&&!item.otherName){document.getElementById('otherName').focus();return}if(editId===null)entries.push(item);else Object.assign(entries.find(x=>x.id===editId),item);weekStart=startOfWeek(new Date(item.date+'T12:00:00'));closeModal();render()};
-  deleteBtn.onclick=()=>{if(editId!==null){const i=entries.findIndex(x=>x.id===editId);if(i>=0)entries.splice(i,1);closeModal();render()}};
+
+  appliesTo.onchange=toggleOther;
+  document.getElementById('cancelBtn').onclick=closeModal;
+  modalWrap.onclick=e=>{if(e.target===modalWrap)closeModal()};
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+  form.onsubmit=async e=>{
+    e.preventDefault();
+    const item={title:document.getElementById('title').value.trim(),appliesTo:appliesTo.value,otherName:document.getElementById('otherName').value.trim(),writtenBy:document.getElementById('writtenBy').value,time:document.getElementById('time').value,date:document.getElementById('dateInput').value,notes:document.getElementById('notes').value.trim()};
+    if(item.appliesTo==='Other'&&!item.otherName){document.getElementById('otherName').focus();return}
+    try{
+      let saved;
+      if(editId===null){
+        const {data,error}=await db.from('calendar_entries').insert(toDb(item)).select().single();
+        if(error) throw error;
+        saved=fromDb(data);
+        entries.push(saved);
+      }else{
+        const {data,error}=await db.from('calendar_entries').update(toDb(item)).eq('id',editId).select().single();
+        if(error) throw error;
+        saved=fromDb(data);
+        const existing=entries.find(x=>x.id===editId);
+        if(existing) Object.assign(existing,saved);
+      }
+      weekStart=startOfWeek(new Date(saved.date+'T12:00:00'));closeModal();render();
+    }catch(err){alert('Could not save this calendar item. '+(err.message||err))}
+  };
+
+  deleteBtn.onclick=async()=>{
+    if(editId===null)return;
+    try{
+      const {error}=await db.from('calendar_entries').delete().eq('id',editId);
+      if(error) throw error;
+      entries=entries.filter(x=>x.id!==editId);closeModal();render();
+    }catch(err){alert('Could not delete this calendar item. '+(err.message||err))}
+  };
+
   document.getElementById('prevWeek').onclick=()=>{const n=addDays(weekStart,-7);if(addDays(n,6)>=new Date(2026,0,1)){weekStart=n;render()}};
   document.getElementById('nextWeek').onclick=()=>{const n=addDays(weekStart,7);if(n<=new Date(2027,11,31)){weekStart=n;render()}};
   document.getElementById('thisWeek').onclick=()=>{weekStart=startOfWeek(initial);render()};
   yearSelect.onchange=()=>{populateWeeks();weekStart=mondayOfISOWeek(Number(yearSelect.value),Number(weekSelect.value)||1);render()};
   weekSelect.onchange=()=>{weekStart=mondayOfISOWeek(Number(yearSelect.value),Number(weekSelect.value));render()};
-  yearSelect.value=String(Math.min(2027,Math.max(2026,addDays(weekStart,3).getFullYear())));populateWeeks();render();
+
+  yearSelect.value=String(Math.min(2027,Math.max(2026,isoWeekYear(weekStart))));
+  populateWeeks();
+  loadEntries();
 </script>
 </body>
 </html>
