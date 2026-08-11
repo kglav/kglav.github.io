@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10131c">
+  <meta name="description" content="A private-style personal game catalogue powered by Supabase.">
+  <title>Game Catalogue</title>
+  <link rel="stylesheet" href="./assets/site.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="./assets/supabase-config.js"></script>
+  <script defer src="./assets/games.js"></script>
+</head>
+<body class="games-page">
+  <div class="game-glow game-glow-one" aria-hidden="true"></div>
+  <div class="game-glow game-glow-two" aria-hidden="true"></div>
+
+  <div class="game-page-shell">
+    <header class="game-header">
+      <a class="calendar-back-link" href="./index.html">&larr; Calendar</a>
+      <div class="game-header-main">
+        <div>
+          <p class="game-eyebrow">Personal library</p>
+          <h1>Game Catalogue</h1>
+          <p>Browse, score and manage the games you own or have played.</p>
+        </div>
+        <button class="game-primary-button" id="openGameModalButton" type="button">
+          <span aria-hidden="true">+</span>
+          Add game
+        </button>
+      </div>
+
+      <div class="game-stat-grid" aria-label="Game library summary">
+        <article>
+          <span>Total games</span>
+          <strong id="totalGamesStat">0</strong>
+        </article>
+        <article>
+          <span>Average score</span>
+          <strong id="averageScoreStat">-</strong>
+        </article>
+        <article>
+          <span>Completed</span>
+          <strong id="completedGamesStat">0</strong>
+        </article>
+        <article>
+          <span>Backlog</span>
+          <strong id="backlogGamesStat">0</strong>
+        </article>
+      </div>
+    </header>
+
+    <main>
+      <section class="game-connection-strip" id="gameConnection" data-state="loading" aria-live="polite">
+        <span class="connection-light" aria-hidden="true"></span>
+        <div>
+          <strong id="gameConnectionTitle">Connecting to the game library</strong>
+          <span id="gameConnectionMessage">Checking the Supabase game tables.</span>
+        </div>
+        <button class="game-text-button" id="refreshGamesButton" type="button">Refresh</button>
+      </section>
+
+      <section class="game-toolbar" aria-label="Search and filter games">
+        <label class="game-search-field">
+          <span class="visually-hidden">Search games</span>
+          <span aria-hidden="true">&#128269;</span>
+          <input id="gameSearchInput" type="search" placeholder="Search your library">
+        </label>
+        <label class="game-select-field">
+          <span>Sort</span>
+          <select id="gameSortSelect">
+            <option value="newest">Newest added</option>
+            <option value="name">Name A-Z</option>
+            <option value="score-high">My score: high to low</option>
+            <option value="metacritic-high">Metacritic: high to low</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="game-filter-section">
+        <div>
+          <p class="game-filter-label">Platform</p>
+          <div class="game-filter-chips" id="platformFilterChips"></div>
+        </div>
+        <div>
+          <p class="game-filter-label">Status</p>
+          <div class="game-filter-chips" id="statusFilterChips"></div>
+        </div>
+      </section>
+
+      <section class="game-results-heading">
+        <div>
+          <p id="gameResultCount">0 games</p>
+          <h2 id="gameResultHeading">All games</h2>
+        </div>
+        <button class="game-secondary-button" id="secondaryAddGameButton" type="button">Add game</button>
+      </section>
+
+      <section class="game-grid" id="gameGrid" aria-live="polite"></section>
+
+      <section class="game-empty-state" id="gameEmptyState" hidden>
+        <div class="empty-controller" aria-hidden="true">&#127918;</div>
+        <h2 id="gameEmptyTitle">No games here yet</h2>
+        <p id="gameEmptyMessage">Add your first game to start the catalogue.</p>
+        <button class="game-primary-button" id="emptyAddGameButton" type="button">Add a game</button>
+      </section>
+    </main>
+
+    <footer class="game-footer">
+      <span>Game data is stored in Supabase.</span>
+      <a href="./index.html">Return to calendar</a>
+    </footer>
+  </div>
+
+  <div class="game-modal-backdrop" id="gameModal" hidden>
+    <section class="game-modal-card" role="dialog" aria-modal="true" aria-labelledby="gameModalTitle">
+      <div class="game-modal-header">
+        <div>
+          <p class="game-eyebrow">Library entry</p>
+          <h2 id="gameModalTitle">Add game</h2>
+        </div>
+        <button class="game-icon-button" type="button" data-close-game-modal aria-label="Close">&times;</button>
+      </div>
+
+      <form id="gameForm" novalidate>
+        <input id="gameRecordId" type="hidden">
+        <div class="game-form-grid">
+          <label class="game-field game-field-wide">
+            <span>Game name</span>
+            <input id="gameName" type="text" maxlength="160" required placeholder="The Legend of Zelda: Tears of the Kingdom">
+          </label>
+
+          <div class="game-field game-field-wide">
+            <span>Platform</span>
+            <div class="form-platform-chips" id="formPlatformChips"></div>
+            <div class="platform-composer" id="platformComposer" hidden>
+              <input id="newPlatformName" type="text" maxlength="40" placeholder="Console or platform name">
+              <button class="game-secondary-button" id="savePlatformButton" type="button">Save platform</button>
+              <button class="game-text-button" id="cancelPlatformButton" type="button">Cancel</button>
+            </div>
+            <button class="add-platform-link" id="addPlatformButton" type="button">+ Create another platform</button>
+          </div>
+
+          <label class="game-field game-field-wide score-field">
+            <span>My score <strong id="myScoreValue">7</strong><small>/10</small></span>
+            <input id="myScore" type="range" min="1" max="10" step="1" value="7">
+            <span class="range-labels"><small>1</small><small>10</small></span>
+          </label>
+
+          <label class="game-field">
+            <span>Metacritic score <em>optional</em></span>
+            <input id="metacriticScore" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="0-100">
+          </label>
+
+          <label class="game-field">
+            <span>Status</span>
+            <select id="gameStatus">
+              <option value="Backlog">Backlog</option>
+              <option value="Playing">Playing</option>
+              <option value="Completed">Completed</option>
+              <option value="Paused">Paused</option>
+            </select>
+          </label>
+
+          <label class="game-field game-field-wide">
+            <span>Cover image URL <em>optional</em></span>
+            <input id="gameCoverUrl" type="url" maxlength="1000" placeholder="https://example.com/cover.jpg">
+            <small>Use a direct HTTPS image URL. A generated cover is shown when this is blank.</small>
+          </label>
+
+          <label class="game-field game-field-wide">
+            <span>Notes <em>optional</em></span>
+            <textarea id="gameNotes" rows="4" maxlength="2000" placeholder="Favourite moments, edition, completion notes..."></textarea>
+          </label>
+        </div>
+
+        <p class="game-form-message" id="gameFormMessage" aria-live="polite"></p>
+        <div class="game-modal-actions">
+          <button class="game-danger-button" id="deleteGameButton" type="button" hidden>Delete game</button>
+          <span class="modal-action-spacer"></span>
+          <button class="game-secondary-button" type="button" data-close-game-modal>Cancel</button>
+          <button class="game-primary-button" id="saveGameButton" type="submit">Save game</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <noscript>
+    <div class="noscript-message">This game catalogue needs JavaScript enabled.</div>
+  </noscript>
+</body>
+</html>

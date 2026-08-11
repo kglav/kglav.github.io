@@ -1,693 +1,212 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Keith & Jah's Week</title>
-  <style>
-    :root {
-      --bg: #f6f7fb;
-      --panel: rgba(255,255,255,.86);
-      --panel-strong: #ffffff;
-      --text: #1f2430;
-      --muted: #697184;
-      --line: #e7e9f0;
-      --shadow: 0 14px 40px rgba(31,36,48,.09);
-      --keith: #6f8df6;
-      --keith-soft: #eef2ff;
-      --jah: #c57ce6;
-      --jah-soft: #f8effc;
-      --angela: #f3a85c;
-      --angela-soft: #fff4e8;
-      --home: #55b89c;
-      --home-soft: #eaf8f3;
-      --activity: #53a5d9;
-      --activity-soft: #eaf6fd;
-      --work: #75829b;
-      --work-soft: #eef1f6;
-      --danger: #e87a7a;
-      --radius-xl: 28px;
-      --radius-lg: 20px;
-      --radius-md: 14px;
-    }
-
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 8% 10%, rgba(111,141,246,.15), transparent 24%),
-        radial-gradient(circle at 92% 8%, rgba(197,124,230,.14), transparent 24%),
-        radial-gradient(circle at 90% 90%, rgba(85,184,156,.12), transparent 22%),
-        var(--bg);
-      padding: 28px;
-    }
-
-    button { font: inherit; }
-
-    .shell {
-      width: min(1500px, 100%);
-      margin: 0 auto;
-    }
-
-    .hero {
-      display: grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap: 22px;
-      align-items: stretch;
-      margin-bottom: 22px;
-    }
-
-    .hero-main,
-    .hero-side,
-    .panel {
-      background: var(--panel);
-      backdrop-filter: blur(18px);
-      border: 1px solid rgba(255,255,255,.8);
-      box-shadow: var(--shadow);
-      border-radius: var(--radius-xl);
-    }
-
-    .hero-main {
-      padding: 32px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hero-main::after {
-      content: "";
-      position: absolute;
-      width: 240px;
-      height: 240px;
-      right: -70px;
-      bottom: -85px;
-      background: linear-gradient(135deg, rgba(111,141,246,.18), rgba(197,124,230,.2));
-      border-radius: 50%;
-      filter: blur(2px);
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: 10px;
-    }
-
-    h1 {
-      font-size: clamp(34px, 5vw, 66px);
-      line-height: .98;
-      margin: 0 0 12px;
-      letter-spacing: -.04em;
-      max-width: 760px;
-    }
-
-    .subtitle {
-      margin: 0;
-      color: var(--muted);
-      font-size: clamp(16px, 2vw, 20px);
-      max-width: 620px;
-    }
-
-    .quick-filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 28px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .chip,
-    .day-tab,
-    .week-btn {
-      border: 0;
-      cursor: pointer;
-      transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease, opacity .2s ease;
-    }
-
-    .chip {
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: #fff;
-      color: var(--muted);
-      box-shadow: inset 0 0 0 1px var(--line);
-      font-weight: 700;
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    .chip:hover,
-    .day-tab:hover,
-    .week-btn:hover { transform: translateY(-2px); }
-    .chip.active {
-      color: #fff;
-      background: var(--text);
-      box-shadow: 0 8px 24px rgba(31,36,48,.18);
-    }
-
-    .hero-side {
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 18px;
-    }
-
-    .week-toggle {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      padding: 7px;
-      background: #eef0f5;
-      border-radius: 18px;
-    }
-
-    .week-btn {
-      padding: 14px 16px;
-      border-radius: 13px;
-      background: transparent;
-      color: var(--muted);
-      font-weight: 800;
-    }
-
-    .week-btn.active {
-      background: #fff;
-      color: var(--text);
-      box-shadow: 0 8px 22px rgba(31,36,48,.1);
-    }
-
-    .week-summary {
-      min-height: 162px;
-      border-radius: 20px;
-      padding: 18px;
-      background: linear-gradient(135deg, rgba(111,141,246,.12), rgba(197,124,230,.11));
-      border: 1px solid rgba(111,141,246,.12);
-      transition: opacity .2s ease, transform .2s ease;
-    }
-
-    .week-summary.swap {
-      opacity: 0;
-      transform: translateY(6px);
-    }
-
-    .week-summary h3 { margin: 0 0 8px; font-size: 18px; }
-    .week-summary ul { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.6; }
-
-    .panel {
-      padding: 24px;
-      margin-bottom: 22px;
-    }
-
-    .panel-heading {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 18px;
-    }
-
-    .panel-heading h2 { margin: 0; font-size: 24px; letter-spacing: -.02em; }
-    .panel-heading p { margin: 4px 0 0; color: var(--muted); }
-
-    .day-tabs {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 2px;
-    }
-
-    .day-tab {
-      min-width: 70px;
-      padding: 11px 14px;
-      border-radius: 13px;
-      background: #f0f2f7;
-      color: var(--muted);
-      font-weight: 800;
-    }
-
-    .day-tab.active {
-      background: var(--text);
-      color: #fff;
-      box-shadow: 0 8px 20px rgba(31,36,48,.17);
-    }
-
-    .today-card {
-      display: grid;
-      grid-template-columns: .48fr 1.52fr;
-      gap: 20px;
-      align-items: stretch;
-    }
-
-    .today-intro {
-      border-radius: 22px;
-      padding: 22px;
-      background: linear-gradient(145deg, #1f2430, #3e4657);
-      color: #fff;
-      min-height: 250px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .today-intro .big-day {
-      font-size: clamp(34px, 4vw, 52px);
-      font-weight: 900;
-      letter-spacing: -.04em;
-    }
-    .today-intro .week-label { opacity: .72; font-weight: 700; }
-
-    .today-events {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0,1fr));
-      gap: 12px;
-    }
-
-    .mini-slot {
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 16px;
-      min-height: 128px;
-      transition: transform .2s ease, box-shadow .2s ease;
-    }
-    .mini-slot:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(31,36,48,.08); }
-    .mini-slot .label { font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 800; letter-spacing: .06em; margin-bottom: 10px; }
-    .mini-slot .items { display: grid; gap: 8px; font-weight: 700; font-size: 14px; line-height: 1.35; }
-    .muted-item { color: var(--muted); font-weight: 600; }
-
-    .timetable-grid {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(220px, 1fr));
-      gap: 14px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-    }
-
-    .day-card {
-      min-width: 220px;
-      background: rgba(255,255,255,.82);
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      padding: 16px;
-      transition: transform .25s ease, border .25s ease, box-shadow .25s ease, opacity .25s ease;
-    }
-    .day-card.selected {
-      transform: translateY(-4px);
-      border-color: rgba(111,141,246,.45);
-      box-shadow: 0 16px 34px rgba(111,141,246,.13);
-    }
-    .day-card.dimmed { opacity: .55; }
-
-    .day-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .day-head h3 { margin: 0; font-size: 19px; }
-    .day-head span { font-size: 12px; color: var(--muted); font-weight: 800; }
-
-    .section-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--muted);
-      font-weight: 900;
-      margin: 14px 0 8px;
-    }
-
-    .event {
-      border: 1px solid transparent;
-      border-radius: 14px;
-      padding: 11px 12px;
-      margin-bottom: 8px;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease, max-height .25s ease;
-      max-height: 76px;
-    }
-    .event:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(31,36,48,.08); }
-    .event.expanded { max-height: 140px; }
-    .event.filtered { display: none; }
-    .event .title { font-weight: 800; font-size: 13px; display: flex; align-items: center; gap: 7px; }
-    .event .meta { font-size: 12px; color: var(--muted); margin-top: 4px; font-weight: 650; }
-    .event .detail { font-size: 12px; color: var(--muted); margin-top: 8px; opacity: 0; transition: opacity .2s ease; }
-    .event.expanded .detail { opacity: 1; }
-
-    .event.keith { background: var(--keith-soft); border-color: rgba(111,141,246,.18); }
-    .event.jah { background: var(--jah-soft); border-color: rgba(197,124,230,.18); }
-    .event.angela { background: var(--angela-soft); border-color: rgba(243,168,92,.2); }
-    .event.home { background: var(--home-soft); border-color: rgba(85,184,156,.2); }
-    .event.activity { background: var(--activity-soft); border-color: rgba(83,165,217,.2); }
-    .event.work { background: var(--work-soft); border-color: rgba(117,130,155,.18); }
-
-    .doing-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
-    .person-card {
-      border-radius: 22px;
-      padding: 20px;
-      border: 1px solid var(--line);
-      background: #fff;
-    }
-    .person-card.keith-card { background: linear-gradient(145deg, #fff, var(--keith-soft)); }
-    .person-card.jah-card { background: linear-gradient(145deg, #fff, var(--jah-soft)); }
-    .person-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .person-title h3 { margin: 0; }
-    .person-badge { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; color: #fff; }
-    .keith-card .person-badge { background: var(--keith); }
-    .jah-card .person-badge { background: var(--jah); }
-    .person-list { display: grid; gap: 9px; }
-    .person-task { background: rgba(255,255,255,.82); border-radius: 13px; padding: 11px 12px; font-weight: 700; font-size: 14px; }
-
-    .glance-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0,1fr));
-      gap: 14px;
-    }
-    .glance-card { border: 1px solid var(--line); border-radius: 20px; padding: 18px; background: #fff; }
-    .glance-card h3 { margin: 0 0 10px; }
-    .glance-card ul { margin: 0; padding-left: 18px; color: var(--muted); line-height: 1.65; }
-
-    .legend {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
-      margin-top: 10px;
-    }
-    .legend span { display: inline-flex; align-items: center; gap: 6px; }
-    .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
-
-    .fade-in { animation: fadeIn .35s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-    @media (max-width: 1100px) {
-      .hero { grid-template-columns: 1fr; }
-      .today-card { grid-template-columns: 1fr; }
-      .today-events { grid-template-columns: repeat(5, minmax(150px,1fr)); overflow-x: auto; }
-      .glance-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    @media (max-width: 720px) {
-      body { padding: 14px; }
-      .hero-main, .hero-side, .panel { border-radius: 22px; }
-      .hero-main { padding: 24px; }
-      .panel { padding: 17px; }
-      .panel-heading { align-items: flex-start; flex-direction: column; }
-      .timetable-grid { grid-template-columns: 1fr; overflow: visible; }
-      .day-card { min-width: 0; }
-      .doing-grid, .glance-grid { grid-template-columns: 1fr; }
-      .today-events { grid-template-columns: 1fr; overflow: visible; }
-      .today-intro { min-height: 190px; }
-      .quick-filters { gap: 8px; }
-      .chip { padding: 9px 12px; }
-    }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f1e8">
+  <meta name="description" content="Keith and Jah's shared family calendar and weekly household timetable.">
+  <title>Keith &amp; Jah's Week</title>
+  <link rel="stylesheet" href="./assets/site.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="./assets/supabase-config.js"></script>
+  <script defer src="./assets/calendar.js"></script>
 </head>
-<body>
-  <main class="shell">
-    <section class="hero">
-      <div class="hero-main">
-        <div class="eyebrow">Weekly household planner</div>
-        <h1>Keith & Jah's Week</h1>
-        <p class="subtitle">Family, work & home — all in one place.</p>
-        <div class="quick-filters" id="filters"></div>
+<body class="calendar-page">
+  <div class="ambient-orb ambient-orb-one" aria-hidden="true"></div>
+  <div class="ambient-orb ambient-orb-two" aria-hidden="true"></div>
+
+  <div class="page-shell">
+    <header class="calendar-hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-dot"></span> Household calendar</p>
+        <h1>Keith &amp; Jah's Week</h1>
+        <p class="hero-subtitle">Family, work and home - all in one place.</p>
+        <div class="hero-meta" aria-label="Current calendar context">
+          <span id="heroDateLabel">This week</span>
+          <span aria-hidden="true">&middot;</span>
+          <span id="heroWeekLabel">Week A</span>
+        </div>
       </div>
 
-      <aside class="hero-side">
+      <div class="hero-controls">
+        <button class="primary-button" type="button" data-open-event-modal>
+          <span aria-hidden="true">+</span>
+          Add calendar entry
+        </button>
+        <div class="week-navigation" aria-label="Week navigation">
+          <button class="icon-button" id="previousWeekButton" type="button" aria-label="Previous week">&larr;</button>
+          <button class="soft-button" id="currentWeekButton" type="button">This week</button>
+          <button class="icon-button" id="nextWeekButton" type="button" aria-label="Next week">&rarr;</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="connection-strip" id="calendarConnection" data-state="loading" aria-live="polite">
+        <span class="connection-light" aria-hidden="true"></span>
         <div>
-          <div class="eyebrow">Alternating schedule</div>
-          <div class="week-toggle">
-            <button class="week-btn active" data-week="A">Week A</button>
-            <button class="week-btn" data-week="B">Week B</button>
+          <strong id="calendarConnectionTitle">Connecting to the shared calendar</strong>
+          <span id="calendarConnectionMessage">The recurring timetable is ready while Supabase connects.</span>
+        </div>
+        <button class="text-button" id="refreshCalendarButton" type="button">Refresh</button>
+      </section>
+
+      <section class="calendar-command-grid" aria-label="Calendar controls and selected day summary">
+        <article class="panel week-control-panel">
+          <div class="panel-heading compact-heading">
+            <div>
+              <p class="section-kicker">Alternating routine</p>
+              <h2>Week pattern</h2>
+            </div>
+            <span class="info-badge" title="Tuesday and Friday drop-offs alternate with Jah's work-from-home day.">i</span>
           </div>
-        </div>
-        <div class="week-summary" id="weekSummary"></div>
-      </aside>
-    </section>
 
-    <section class="panel">
-      <div class="panel-heading">
+          <div class="segmented-control" id="weekTypeToggle" aria-label="Choose week pattern">
+            <button type="button" data-week-type="A">Week A</button>
+            <button type="button" data-week-type="B">Week B</button>
+          </div>
+          <div class="week-summary" id="weekSummary"></div>
+        </article>
+
+        <article class="panel focus-panel">
+          <div class="panel-heading focus-heading">
+            <div>
+              <p class="section-kicker">Daily focus</p>
+              <h2 id="focusDayHeading">Monday</h2>
+              <p id="focusDateLabel" class="muted-copy"></p>
+            </div>
+            <div class="day-selector" id="daySelector" aria-label="Choose a weekday"></div>
+          </div>
+          <div class="focus-timeline" id="focusTimeline"></div>
+        </article>
+      </section>
+
+      <section class="filter-bar" aria-label="Filter timetable">
         <div>
-          <h2>Today's Plan</h2>
-          <p>Pick a day to see the responsibilities at a glance.</p>
+          <p class="section-kicker">Show on timetable</p>
+          <div class="filter-chips" id="calendarFilters"></div>
         </div>
-        <div class="day-tabs" id="dayTabs"></div>
-      </div>
-      <div class="today-card" id="todayCard"></div>
-    </section>
+        <p class="filter-help">Tap an item for more detail. Supabase entries use the dotted card style.</p>
+      </section>
 
-    <section class="panel">
-      <div class="panel-heading">
-        <div>
-          <h2>Weekly Timetable</h2>
-          <p>Tap any responsibility to reveal a little more detail.</p>
-        </div>
-        <div class="legend">
-          <span><i class="dot" style="background:var(--keith)"></i>Keith</span>
-          <span><i class="dot" style="background:var(--jah)"></i>Jah</span>
-          <span><i class="dot" style="background:var(--angela)"></i>Angela</span>
-          <span><i class="dot" style="background:var(--home)"></i>Home</span>
-        </div>
-      </div>
-      <div class="timetable-grid" id="timetable"></div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-heading">
-        <div>
-          <h2>Who's Doing What?</h2>
-          <p id="doingSubtitle"></p>
-        </div>
-      </div>
-      <div class="doing-grid" id="doingGrid"></div>
-    </section>
-
-    <section class="panel">
-      <div class="panel-heading">
-        <div>
-          <h2>At a Glance</h2>
-          <p>The recurring pattern behind the week.</p>
-        </div>
-      </div>
-      <div class="glance-grid" id="glanceGrid"></div>
-    </section>
-  </main>
-
-
-  <div style="width:min(1500px,100%);margin:6px auto 0;display:flex;justify-content:center;padding:0 0 8px;">
-    <a href="calendar.html" style="display:inline-flex;align-items:center;gap:8px;padding:10px 15px;border-radius:999px;background:rgba(255,255,255,.86);border:1px solid rgba(255,255,255,.9);box-shadow:0 10px 28px rgba(31,36,48,.08);color:#697184;text-decoration:none;font-weight:800;font-size:13px;transition:transform .2s ease,box-shadow .2s ease;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 14px 32px rgba(31,36,48,.12)'" onmouseout="this.style.transform='';this.style.boxShadow='0 10px 28px rgba(31,36,48,.08)'">📅 Open family calendar</a>
-  </div>
-  <script>
-    const days = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
-    const shortDays = ['Mon','Tue','Wed','Thu','Fri'];
-    let currentWeek = 'A';
-    let selectedDay = 'Monday';
-    let activeFilter = 'All';
-
-    const filters = [
-      ['All','✨'], ['Angela','👶'], ['Keith','K'], ['Jah','J'],
-      ['Work','💼'], ['Childcare','🏫'], ['Home','🏠'], ['Activities','🛶']
-    ];
-
-    function event(title, owner, category, type, icon, detail, tags=[]) {
-      return { title, owner, category, type, icon, detail, tags: [owner, category, type, ...tags] };
-    }
-
-    function buildSchedule(week) {
-      const tuesdayDrop = week === 'A' ? 'Keith' : 'Jah';
-      const fridayDrop = week === 'A' ? 'Jah' : 'Keith';
-      const jahTuesdayWork = week === 'B' ? 'WFH' : 'Work';
-      const jahFridayWork = week === 'A' ? 'WFH' : 'Work';
-
-      return {
-        Monday: {
-          Morning: [event('Nursery drop-off — Keith','Keith','Childcare','Angela','🏫','Keith takes Angela to nursery.')],
-          Daytime: [event('Keith — Office','Keith','Work','Work','🏢','Keith works from the office.'), event('Jah — Work','Jah','Work','Work','💼','Jah is working.')],
-          Evening: [event('Nursery pick-up — Keith','Keith','Childcare','Angela','👶','Keith picks Angela up from nursery.')],
-          Bedtime: [event('Angela bedtime — Keith','Keith','Childcare','Angela','🌙','Keith puts Angela to bed.')]
-        },
-        Tuesday: {
-          Morning: [event(`Nursery drop-off — ${tuesdayDrop}`, tuesdayDrop,'Childcare','Angela','🏫',`${tuesdayDrop} takes Angela to nursery.`)],
-          Daytime: [event('Keith — WFH','Keith','Work','Work','🏠','Keith works from home.'), event(`Jah — ${jahTuesdayWork}`, 'Jah','Work','Work', jahTuesdayWork === 'WFH' ? '🏠' : '💼', jahTuesdayWork === 'WFH' ? 'Jah works from home and handles nursery drop-off.' : 'Jah is working away from home.')],
-          Evening: [event('Nursery pick-up — Jah','Jah','Childcare','Angela','👶','Jah picks Angela up from nursery.'), event('Keith — Kayaking','Keith','Activities','Activities','🛶','Keith kayaks in the evening.')],
-          Bedtime: [event('Angela bedtime — Jah','Jah','Childcare','Angela','🌙','Jah puts Angela to bed.')]
-        },
-        Wednesday: {
-          Morning: [event('Yiayia drop-off — Jah','Jah','Childcare','Angela','👵','Jah takes Angela to Yiayia.')],
-          Daytime: [event('Keith — Office','Keith','Work','Work','🏢','Keith works from the office.'), event('Jah — Day Off','Jah','Work','Work','☀️','Jah has Wednesday off work.')],
-          Evening: [event('Yiayia pick-up — Jah','Jah','Childcare','Angela','👵','Jah picks Angela up from Yiayia.')],
-          Bedtime: [event('Angela bedtime — Keith','Keith','Childcare','Angela','🌙','Keith puts Angela to bed.')]
-        },
-        Thursday: {
-          Morning: [event('Nursery drop-off — Keith','Keith','Childcare','Angela','🏫','Keith takes Angela to nursery.')],
-          Daytime: [event('Keith — WFH','Keith','Work','Work','🏠','Keith works from home.'), event('Jah — Work','Jah','Work','Work','💼','Jah is working.')],
-          Evening: [event('Nursery pick-up — Jah','Jah','Childcare','Angela','👶','Jah picks Angela up from nursery.'), event('Keith — Kayaking','Keith','Activities','Activities','🛶','Keith kayaks in the evening.')],
-          Bedtime: [event('Angela bedtime — Jah','Jah','Childcare','Angela','🌙','Jah puts Angela to bed.')]
-        },
-        Friday: {
-          Morning: [event(`Nursery drop-off — ${fridayDrop}`,fridayDrop,'Childcare','Angela','🏫',`${fridayDrop} takes Angela to nursery.`)],
-          Daytime: [event('Keith — Office','Keith','Work','Work','🏢','Keith works from the office.'), event(`Jah — ${jahFridayWork}`,'Jah','Work','Work',jahFridayWork === 'WFH' ? '🏠' : '💼',jahFridayWork === 'WFH' ? 'Jah works from home and handles nursery drop-off.' : 'Jah is working away from home.'), ...(week === 'A' ? [event('Julie — Cleaner','Julie','Home','Home','🧹','Julie comes to clean. Jah is home to let her in.',['Jah'])] : [])],
-          Evening: [event('Nursery pick-up — Jah','Jah','Childcare','Angela','👶','Jah picks Angela up from nursery.')],
-          Bedtime: [event('Angela bedtime — Keith','Keith','Childcare','Angela','🌙','Keith puts Angela to bed.')]
-        }
-      };
-    }
-
-    function matchesFilter(ev) {
-      if (activeFilter === 'All') return true;
-      return ev.tags.includes(activeFilter);
-    }
-
-    function renderFilters() {
-      const el = document.getElementById('filters');
-      el.innerHTML = filters.map(([name, icon]) => `<button class="chip ${name===activeFilter?'active':''}" data-filter="${name}"><span>${icon}</span>${name}</button>`).join('');
-      el.querySelectorAll('.chip').forEach(btn => btn.addEventListener('click', () => {
-        activeFilter = btn.dataset.filter;
-        renderFilters(); renderTimetable(); renderToday();
-      }));
-    }
-
-    function renderWeekSummary() {
-      const el = document.getElementById('weekSummary');
-      el.classList.add('swap');
-      setTimeout(() => {
-        el.innerHTML = currentWeek === 'A' ? `
-          <h3>Week A highlights</h3>
-          <ul>
-            <li>Keith does Tuesday nursery drop-off.</li>
-            <li>Jah does Friday nursery drop-off.</li>
-            <li>Jah works from home Friday.</li>
-            <li>Julie cleans on Friday.</li>
-          </ul>` : `
-          <h3>Week B highlights</h3>
-          <ul>
-            <li>Jah does Tuesday nursery drop-off.</li>
-            <li>Keith does Friday nursery drop-off.</li>
-            <li>Jah works from home Tuesday.</li>
-            <li>No cleaner on Friday.</li>
-          </ul>`;
-        el.classList.remove('swap');
-      }, 130);
-    }
-
-    function renderDayTabs() {
-      const el = document.getElementById('dayTabs');
-      el.innerHTML = days.map((d,i) => `<button class="day-tab ${d===selectedDay?'active':''}" data-day="${d}">${shortDays[i]}</button>`).join('');
-      el.querySelectorAll('.day-tab').forEach(btn => btn.addEventListener('click', () => {
-        selectedDay = btn.dataset.day;
-        renderDayTabs(); renderToday(); renderTimetable(); renderDoing();
-      }));
-    }
-
-    function renderToday() {
-      const schedule = buildSchedule(currentWeek)[selectedDay];
-      const sections = ['Morning','Daytime','Evening','Bedtime'];
-      const extra = selectedDay === 'Wednesday' ? 'Yiayia day' : 'Nursery day';
-      const visibleEvents = sections.flatMap(s => schedule[s]).filter(matchesFilter);
-      const grouped = sections.map(s => ({ name:s, items:schedule[s].filter(matchesFilter) }));
-      document.getElementById('todayCard').innerHTML = `
-        <div class="today-intro fade-in">
+      <section class="section-block">
+        <div class="section-heading-row">
           <div>
-            <div class="week-label">Week ${currentWeek}</div>
-            <div class="big-day">${selectedDay}</div>
+            <p class="section-kicker">Monday to Friday</p>
+            <h2 class="section-title">Weekly timetable</h2>
           </div>
-          <div>${extra}<br><span style="opacity:.7">${visibleEvents.length} visible responsibilities</span></div>
+          <div class="week-range-pill" id="weekRangePill"></div>
         </div>
-        <div class="today-events fade-in">
-          ${grouped.map(g => `<div class="mini-slot"><div class="label">${g.name}</div><div class="items">${g.items.length ? g.items.map(e => `<div>${e.icon} ${e.title}</div>`).join('') : '<div class="muted-item">Nothing matching this filter</div>'}</div></div>`).join('')}
-          <div class="mini-slot"><div class="label">Quick note</div><div class="items"><div>${currentWeek === 'A' ? 'Friday is Jah WFH + Julie week.' : 'Tuesday is Jah WFH week.'}</div></div></div>
-        </div>`;
-    }
+        <div class="week-board" id="weekBoard" aria-live="polite"></div>
+      </section>
 
-    function renderEvent(ev) {
-      const ownerClass = ev.owner === 'Keith' ? 'keith' : ev.owner === 'Jah' ? 'jah' : ev.category === 'Home' ? 'home' : ev.category === 'Activities' ? 'activity' : ev.category === 'Work' ? 'work' : 'angela';
-      return `<div class="event ${ownerClass} ${matchesFilter(ev)?'':'filtered'}" tabindex="0">
-        <div class="title"><span>${ev.icon}</span>${ev.title}</div>
-        <div class="meta">${ev.category}</div>
-        <div class="detail">${ev.detail}</div>
-      </div>`;
-    }
+      <section class="insight-grid section-block">
+        <article class="panel responsibilities-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Selected day</p>
+              <h2>Who's doing what?</h2>
+            </div>
+          </div>
+          <div class="people-columns" id="peopleColumns"></div>
+        </article>
 
-    function renderTimetable() {
-      const schedule = buildSchedule(currentWeek);
-      const el = document.getElementById('timetable');
-      el.innerHTML = days.map((day,i) => `
-        <article class="day-card ${day===selectedDay?'selected':'dimmed'}" data-day-card="${day}">
-          <div class="day-head"><h3>${day}</h3><span>${day==='Wednesday'?'Yiayia':'Nursery'}</span></div>
-          ${['Morning','Daytime','Evening','Bedtime'].map(section => `
-            <div class="section-label">${section}</div>
-            ${schedule[day][section].map(renderEvent).join('')}
-          `).join('')}
-        </article>`).join('');
+        <article class="panel shared-list-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Saved in Supabase</p>
+              <h2>Shared entries</h2>
+            </div>
+            <button class="small-button" type="button" data-open-event-modal>Add</button>
+          </div>
+          <div class="shared-entry-list" id="sharedEntryList"></div>
+        </article>
+      </section>
 
-      el.querySelectorAll('.day-card').forEach(card => card.addEventListener('click', (e) => {
-        if (e.target.closest('.event')) return;
-        selectedDay = card.dataset.dayCard;
-        renderDayTabs(); renderToday(); renderTimetable(); renderDoing();
-      }));
-      el.querySelectorAll('.event').forEach(ev => {
-        const toggle = () => ev.classList.toggle('expanded');
-        ev.addEventListener('click', toggle);
-        ev.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') toggle(); });
-      });
-    }
-
-    function renderDoing() {
-      const schedule = buildSchedule(currentWeek)[selectedDay];
-      const all = Object.values(schedule).flat();
-      const tasksFor = person => all.filter(e => e.owner === person || (e.title.includes(person) && e.owner !== 'Julie'));
-      const keith = tasksFor('Keith');
-      const jah = tasksFor('Jah');
-      document.getElementById('doingSubtitle').textContent = `${selectedDay} · Week ${currentWeek}`;
-      document.getElementById('doingGrid').innerHTML = `
-        <div class="person-card keith-card fade-in">
-          <div class="person-title"><h3>Keith</h3><div class="person-badge">K</div></div>
-          <div class="person-list">${keith.length ? keith.map(e => `<div class="person-task">${e.icon} ${e.title}</div>`).join('') : '<div class="person-task">No assigned items</div>'}</div>
+      <section class="section-block glance-section">
+        <div class="section-heading-row">
+          <div>
+            <p class="section-kicker">Recurring routine</p>
+            <h2 class="section-title">At a glance</h2>
+          </div>
         </div>
-        <div class="person-card jah-card fade-in">
-          <div class="person-title"><h3>Jah</h3><div class="person-badge">J</div></div>
-          <div class="person-list">${jah.length ? jah.map(e => `<div class="person-task">${e.icon} ${e.title}</div>`).join('') : '<div class="person-task">No assigned items</div>'}</div>
-        </div>`;
-    }
+        <div class="glance-grid" id="glanceGrid"></div>
+      </section>
+    </main>
 
-    function renderGlance() {
-      document.getElementById('glanceGrid').innerHTML = `
-        <div class="glance-card"><h3>Keith</h3><ul><li>Office: Mon / Wed / Fri</li><li>WFH: Tue / Thu</li><li>Kayak: Tue / Thu</li><li>Bedtime: Mon / Wed / Fri</li></ul></div>
-        <div class="glance-card"><h3>Jah</h3><ul><li>Day off: Wed</li><li>WFH: ${currentWeek==='A'?'Fri':'Tue'}</li><li>Bedtime: Tue / Thu</li><li>Pickup: Tue / Wed / Thu / Fri</li></ul></div>
-        <div class="glance-card"><h3>Angela</h3><ul><li>Nursery: Mon / Tue / Thu / Fri</li><li>Yiayia: Wed</li><li>Drop-offs alternate Tue / Fri</li></ul></div>
-        <div class="glance-card"><h3>Home</h3><ul><li>Julie: ${currentWeek==='A'?'Friday this week':'Not this week'}</li><li>Cleaner overlaps Jah's Friday WFH week</li></ul></div>`;
-    }
+    <footer class="site-footer">
+      <span>Shared household calendar</span>
+      <span id="footerSyncLabel">Recurring schedule available</span>
+    </footer>
+  </div>
 
-    document.querySelectorAll('.week-btn').forEach(btn => btn.addEventListener('click', () => {
-      currentWeek = btn.dataset.week;
-      document.querySelectorAll('.week-btn').forEach(b => b.classList.toggle('active', b.dataset.week === currentWeek));
-      renderWeekSummary(); renderToday(); renderTimetable(); renderDoing(); renderGlance();
-    }));
+  <a class="game-corner-link" href="./games.html" aria-label="Open the game catalogue" title="Game catalogue">&#127918;</a>
 
-    renderFilters();
-    renderWeekSummary();
-    renderDayTabs();
-    renderToday();
-    renderTimetable();
-    renderDoing();
-    renderGlance();
-  </script>
+  <div class="modal-backdrop" id="eventModal" hidden>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle">
+      <div class="modal-header">
+        <div>
+          <p class="section-kicker">Shared calendar</p>
+          <h2 id="eventModalTitle">Add calendar entry</h2>
+        </div>
+        <button class="icon-button modal-close" type="button" data-close-event-modal aria-label="Close">&times;</button>
+      </div>
+
+      <form id="eventForm" novalidate>
+        <input type="hidden" id="eventRecordId">
+        <div class="form-grid">
+          <label class="field field-wide">
+            <span>Title</span>
+            <input id="eventTitle" name="title" type="text" maxlength="120" required placeholder="Dentist, nursery reminder, family plan...">
+          </label>
+          <label class="field">
+            <span>Date</span>
+            <input id="eventDate" name="date" type="date" required>
+          </label>
+          <label class="field">
+            <span>Time <em>optional</em></span>
+            <input id="eventTime" name="time" type="time">
+          </label>
+          <label class="field">
+            <span>Category</span>
+            <select id="eventCategory" name="category">
+              <option value="family">Family</option>
+              <option value="childcare">Childcare</option>
+              <option value="work">Work</option>
+              <option value="home">Home</option>
+              <option value="activity">Activity</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Person</span>
+            <select id="eventPerson" name="person">
+              <option value="">Everyone / unassigned</option>
+              <option value="Keith">Keith</option>
+              <option value="Jah">Jah</option>
+              <option value="Angela">Angela</option>
+              <option value="Julie">Julie</option>
+            </select>
+          </label>
+          <label class="field field-wide">
+            <span>Notes <em>optional</em></span>
+            <textarea id="eventNotes" name="notes" rows="4" maxlength="1000" placeholder="Anything useful to remember"></textarea>
+          </label>
+        </div>
+
+        <p class="form-message" id="eventFormMessage" aria-live="polite"></p>
+        <div class="modal-actions">
+          <button class="danger-button" id="deleteEventButton" type="button" hidden>Delete entry</button>
+          <span class="modal-action-spacer"></span>
+          <button class="soft-button" type="button" data-close-event-modal>Cancel</button>
+          <button class="primary-button" id="saveEventButton" type="submit">Save entry</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <noscript>
+    <div class="noscript-message">This calendar needs JavaScript enabled.</div>
+  </noscript>
 </body>
 </html>
