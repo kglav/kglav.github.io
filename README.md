@@ -113,3 +113,10 @@ The Supabase JavaScript library is loaded from jsDelivr. Check the browser conne
 ### Data can be read but not changed
 
 Check the table's Row Level Security policies and grants. Re-running `game-library-setup.sql` safely recreates the game policies and does not touch the calendar table.
+
+
+## Existing calendar schema support
+
+This build explicitly supports the existing `calendar_entries` columns:
+`id`, `event_date`, `title`, `applies_to`, `other_name`, `written_by`, `event_time`, `notes`, and `created_at`.
+The calendar form maps its Person field to `applies_to`; a blank Person is stored as `Everyone`. New rows use `Website` for `written_by` when that column is present. Existing `written_by` values are not overwritten when editing an entry.
