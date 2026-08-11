@@ -794,7 +794,10 @@
     var time = firstValue(row, ["event_time", "start_time", "time", "starts_at", "start_at"]);
     var notes = firstValue(row, ["notes", "description", "details", "detail"]);
     var category = firstValue(row, ["category", "event_category", "type"]);
-    var person = firstValue(row, ["person", "owner", "assigned_to", "member"]);
+    var person = firstValue(row, ["applies_to", "person", "owner", "assigned_to", "member"]);
+    if (person && String(person).toLowerCase() === "other" && row.other_name) {
+      person = row.other_name;
+    }
     return {
       id: idKey ? row[idKey] : null,
       title: title === null || typeof title === "undefined" ? "Untitled entry" : String(title),
@@ -810,6 +813,9 @@
   AdaptiveCalendarRepository.prototype.create = async function (record) {
     if (this.columns && this.columns.size) {
       var payload = this.payloadForColumns(record, this.columns);
+      if (this.columns.has("written_by") && !Object.prototype.hasOwnProperty.call(payload, "written_by")) {
+        payload.written_by = "Website";
+      }
       return this.insertPayload(payload);
     }
     return this.insertUsingProfiles(record);
@@ -859,6 +865,7 @@
   AdaptiveCalendarRepository.prototype.insertUsingProfiles = async function (record) {
     var dateTime = combineDateTime(record.date, record.time);
     var profiles = [
+      { required: ["title", "event_date", "applies_to"], payload: compactObject({ title: record.title, event_date: record.date, applies_to: record.person || "Everyone", written_by: "Website", event_time: record.time, notes: record.notes }) },
       { required: ["title", "event_date"], payload: compactObject({ title: record.title, event_date: record.date, start_time: record.time, description: record.notes, category: record.category, person: record.person }) },
       { required: ["title", "event_date"], payload: compactObject({ title: record.title, event_date: record.date, event_time: record.time, notes: record.notes, category: record.category, owner: record.person }) },
       { required: ["title", "entry_date"], payload: compactObject({ title: record.title, entry_date: record.date, event_time: record.time, notes: record.notes, category: record.category, person: record.person }) },
@@ -914,6 +921,21 @@
     assignFirst(payload, columns, ["notes", "description", "details", "detail"], record.notes || null);
     assignFirst(payload, columns, ["category", "event_category", "type"], record.category || "other");
     assignFirst(payload, columns, ["person", "owner", "assigned_to", "member"], record.person || null);
+
+    // Existing household-calendar schema: applies_to is required.
+    // Keep it separate from the generic person aliases so a blank UI value
+    // still becomes a valid shared-calendar value instead of NULL.
+    if (columns.has("applies_to")) {
+      payload.applies_to = record.person || "Everyone";
+    }
+    if (columns.has("other_name") && record.person && ["Keith", "Jah", "Angela", "Julie"].indexOf(record.person) === -1) {
+      payload.other_name = record.person;
+    }
+    // Do not overwrite authorship on edits. For a new row, insertPayload
+    // supplies a neutral source label if written_by is a required column.
+    if (columns.has("written_by") && record.writtenBy) {
+      payload.written_by = record.writtenBy;
+    }
 
     var startsAtKey = firstExisting(columns, ["starts_at", "start_at"]);
     if (startsAtKey) {
