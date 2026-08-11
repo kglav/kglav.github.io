@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f1e8">
+  <meta name="description" content="Keith and Jah's shared family calendar and weekly household timetable.">
+  <title>Keith &amp; Jah's Week</title>
+  <link rel="stylesheet" href="./assets/site.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="./assets/supabase-config.js"></script>
+  <script defer src="./assets/calendar.js"></script>
+</head>
+<body class="calendar-page">
+  <div class="ambient-orb ambient-orb-one" aria-hidden="true"></div>
+  <div class="ambient-orb ambient-orb-two" aria-hidden="true"></div>
+
+  <div class="page-shell">
+    <header class="calendar-hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-dot"></span> Household calendar</p>
+        <h1>Keith &amp; Jah's Week</h1>
+        <p class="hero-subtitle">Family, work and home - all in one place.</p>
+        <div class="hero-meta" aria-label="Current calendar context">
+          <span id="heroDateLabel">This week</span>
+          <span aria-hidden="true">&middot;</span>
+          <span id="heroWeekLabel">Week A</span>
+        </div>
+      </div>
+
+      <div class="hero-controls">
+        <button class="primary-button" type="button" data-open-event-modal>
+          <span aria-hidden="true">+</span>
+          Add calendar entry
+        </button>
+        <div class="week-navigation" aria-label="Week navigation">
+          <button class="icon-button" id="previousWeekButton" type="button" aria-label="Previous week">&larr;</button>
+          <button class="soft-button" id="currentWeekButton" type="button">This week</button>
+          <button class="icon-button" id="nextWeekButton" type="button" aria-label="Next week">&rarr;</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="connection-strip" id="calendarConnection" data-state="loading" aria-live="polite">
+        <span class="connection-light" aria-hidden="true"></span>
+        <div>
+          <strong id="calendarConnectionTitle">Connecting to the shared calendar</strong>
+          <span id="calendarConnectionMessage">The recurring timetable is ready while Supabase connects.</span>
+        </div>
+        <button class="text-button" id="refreshCalendarButton" type="button">Refresh</button>
+      </section>
+
+      <section class="calendar-command-grid" aria-label="Calendar controls and selected day summary">
+        <article class="panel week-control-panel">
+          <div class="panel-heading compact-heading">
+            <div>
+              <p class="section-kicker">Alternating routine</p>
+              <h2>Week pattern</h2>
+            </div>
+            <span class="info-badge" title="Tuesday and Friday drop-offs alternate with Jah's work-from-home day.">i</span>
+          </div>
+
+          <div class="segmented-control" id="weekTypeToggle" aria-label="Choose week pattern">
+            <button type="button" data-week-type="A">Week A</button>
+            <button type="button" data-week-type="B">Week B</button>
+          </div>
+          <div class="week-summary" id="weekSummary"></div>
+        </article>
+
+        <article class="panel focus-panel">
+          <div class="panel-heading focus-heading">
+            <div>
+              <p class="section-kicker">Daily focus</p>
+              <h2 id="focusDayHeading">Monday</h2>
+              <p id="focusDateLabel" class="muted-copy"></p>
+            </div>
+            <div class="day-selector" id="daySelector" aria-label="Choose a weekday"></div>
+          </div>
+          <div class="focus-timeline" id="focusTimeline"></div>
+        </article>
+      </section>
+
+      <section class="filter-bar" aria-label="Filter timetable">
+        <div>
+          <p class="section-kicker">Show on timetable</p>
+          <div class="filter-chips" id="calendarFilters"></div>
+        </div>
+        <p class="filter-help">Tap an item for more detail. Supabase entries use the dotted card style.</p>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading-row">
+          <div>
+            <p class="section-kicker">Monday to Friday</p>
+            <h2 class="section-title">Weekly timetable</h2>
+          </div>
+          <div class="week-range-pill" id="weekRangePill"></div>
+        </div>
+        <div class="week-board" id="weekBoard" aria-live="polite"></div>
+      </section>
+
+      <section class="insight-grid section-block">
+        <article class="panel responsibilities-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Selected day</p>
+              <h2>Who's doing what?</h2>
+            </div>
+          </div>
+          <div class="people-columns" id="peopleColumns"></div>
+        </article>
+
+        <article class="panel shared-list-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">Saved in Supabase</p>
+              <h2>Shared entries</h2>
+            </div>
+            <button class="small-button" type="button" data-open-event-modal>Add</button>
+          </div>
+          <div class="shared-entry-list" id="sharedEntryList"></div>
+        </article>
+      </section>
+
+      <section class="section-block glance-section">
+        <div class="section-heading-row">
+          <div>
+            <p class="section-kicker">Recurring routine</p>
+            <h2 class="section-title">At a glance</h2>
+          </div>
+        </div>
+        <div class="glance-grid" id="glanceGrid"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>Shared household calendar</span>
+      <span id="footerSyncLabel">Recurring schedule available</span>
+    </footer>
+  </div>
+
+  <a class="game-corner-link" href="./games.html" aria-label="Open the game catalogue" title="Game catalogue">&#127918;</a>
+
+  <div class="modal-backdrop" id="eventModal" hidden>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle">
+      <div class="modal-header">
+        <div>
+          <p class="section-kicker">Shared calendar</p>
+          <h2 id="eventModalTitle">Add calendar entry</h2>
+        </div>
+        <button class="icon-button modal-close" type="button" data-close-event-modal aria-label="Close">&times;</button>
+      </div>
+
+      <form id="eventForm" novalidate>
+        <input type="hidden" id="eventRecordId">
+        <div class="form-grid">
+          <label class="field field-wide">
+            <span>Title</span>
+            <input id="eventTitle" name="title" type="text" maxlength="120" required placeholder="Dentist, nursery reminder, family plan...">
+          </label>
+          <label class="field">
+            <span>Date</span>
+            <input id="eventDate" name="date" type="date" required>
+          </label>
+          <label class="field">
+            <span>Time <em>optional</em></span>
+            <input id="eventTime" name="time" type="time">
+          </label>
+          <label class="field">
+            <span>Category</span>
+            <select id="eventCategory" name="category">
+              <option value="family">Family</option>
+              <option value="childcare">Childcare</option>
+              <option value="work">Work</option>
+              <option value="home">Home</option>
+              <option value="activity">Activity</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Person</span>
+            <select id="eventPerson" name="person">
+              <option value="">Everyone / unassigned</option>
+              <option value="Keith">Keith</option>
+              <option value="Jah">Jah</option>
+              <option value="Angela">Angela</option>
+              <option value="Julie">Julie</option>
+            </select>
+          </label>
+          <label class="field field-wide">
+            <span>Notes <em>optional</em></span>
+            <textarea id="eventNotes" name="notes" rows="4" maxlength="1000" placeholder="Anything useful to remember"></textarea>
+          </label>
+        </div>
+
+        <p class="form-message" id="eventFormMessage" aria-live="polite"></p>
+        <div class="modal-actions">
+          <button class="danger-button" id="deleteEventButton" type="button" hidden>Delete entry</button>
+          <span class="modal-action-spacer"></span>
+          <button class="soft-button" type="button" data-close-event-modal>Cancel</button>
+          <button class="primary-button" id="saveEventButton" type="submit">Save entry</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <noscript>
+    <div class="noscript-message">This calendar needs JavaScript enabled.</div>
+  </noscript>
+</body>
+</html>
