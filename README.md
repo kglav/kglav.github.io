@@ -120,3 +120,14 @@ Check the table's Row Level Security policies and grants. Re-running `game-libra
 This build explicitly supports the existing `calendar_entries` columns:
 `id`, `event_date`, `title`, `applies_to`, `other_name`, `written_by`, `event_time`, `notes`, and `created_at`.
 The calendar form maps its Person field to `applies_to`; a blank Person is stored as `Everyone`. New rows use `Website` for `written_by` when that column is present. Existing `written_by` values are not overwritten when editing an entry.
+
+## Shared password gate
+
+This package includes a lightweight browser-side password gate on both the calendar and game catalogue.
+
+- Current password: `weekpreview`
+- A successful unlock is remembered in that browser for 7 days.
+- Use the small **Lock** button at the bottom-left to lock the site again immediately.
+- The password itself is not stored as plain text in the site; `assets/auth.js` contains only its SHA-256 hash.
+
+This is intentionally only a first-line privacy measure for a static GitHub Pages preview. A determined technical user can still bypass client-side protection by inspecting or changing the site's JavaScript.
