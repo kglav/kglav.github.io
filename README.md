@@ -1,3 +1,31 @@
+# Keith & Jah shared site - routine configuration version
+
+This package keeps the existing calendar and game catalogue, retains the lightweight password (`jokes`), and adds a Supabase-backed **Routine Settings** page at `config.html`.
+
+## Important: existing calendar table is unchanged
+
+The site still uses `public.calendar_entries` for dated / ad-hoc events. The Add calendar entry button on the home page still creates and edits those rows using the existing schema (`id`, `event_date`, `title`, `applies_to`, `other_name`, `written_by`, `event_time`, `notes`, `created_at`). **Do not delete or rebuild that table.**
+
+## Add the recurring task table in Supabase
+
+1. Open your Supabase project.
+2. Open **SQL Editor**.
+3. Choose **New query**.
+4. Open `recurring-tasks-setup.sql` from this package, copy all of it, and paste it into the query editor.
+5. Click **Run** once.
+6. In **Table Editor**, you should now see `recurring_tasks`.
+7. Open the deployed site's `config.html` (or use the gear button on the home page). It should report that the routine is connected.
+
+The SQL creates only `public.recurring_tasks`, enables the browser permissions needed by this password-gated preview site, and seeds it with the routine that was previously hard-coded. The seed runs only if the table is empty, so re-running the script later will not duplicate your tasks.
+
+## Routine Settings page
+
+The small gear button at the bottom-right of the home calendar opens the settings page. From there you can add, edit, enable/disable or delete repeating tasks. Changes are read directly by the home calendar, so changing kayaking from Tuesday to Wednesday only requires editing the task's Day field. Week-specific items can be set to Every week, Week A only or Week B only.
+
+If `recurring_tasks` has not been created yet, the home page deliberately falls back to the previous built-in routine so the calendar remains usable. Once the table exists, Supabase becomes the source of truth for the recurring timetable.
+
+---
+
 # Keith and Jah combined calendar and game catalogue
 
 This folder is a static GitHub Pages site with two pages:

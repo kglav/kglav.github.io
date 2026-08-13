@@ -47,6 +47,10 @@
     calendarReady: false,
     calendarError: "",
     repository: null,
+    recurringTasks: [],
+    recurringReady: false,
+    recurringError: "",
+    recurringRepository: null,
     editingEntryId: null
   };
 
@@ -244,30 +248,22 @@
       button.setAttribute("aria-pressed", active ? "true" : "false");
     });
 
-    var summary;
-    if (state.weekType === "A") {
-      summary = {
-        title: "Friday is Jah's home day",
-        items: [
-          "Keith handles Tuesday nursery drop-off.",
-          "Jah handles Friday drop-off and works from home.",
-          "Julie cleans on Friday."
-        ]
-      };
-    } else {
-      summary = {
-        title: "Tuesday is Jah's home day",
-        items: [
-          "Jah handles Tuesday nursery drop-off and works from home.",
-          "Keith handles Friday nursery drop-off.",
-          "Julie does not clean this Friday."
-        ]
-      };
+    var schedule = getSchedule(state.weekType);
+    var total = schedule.reduce(function (sum, day) { return sum + day.events.length; }, 0);
+    var specific = state.recurringTasks.filter(function (task) {
+      return task.active !== false && String(task.week_pattern || "EVERY").toUpperCase() === state.weekType;
+    }).slice(0, 3);
+    var items = specific.map(function (task) {
+      return DAY_NAMES[Number(task.day_of_week) - 1] + ": " + task.title + (task.owner ? " - " + task.owner : "");
+    });
+    if (!items.length) {
+      items.push("This week uses the shared recurring routine.");
     }
+    items.push("Use Routine settings to make blanket changes without editing the site code.");
 
-    elements.weekSummary.innerHTML = "<strong>" + escapeHtml(summary.title) + "</strong><ul>" + summary.items.map(function (item) {
+    elements.weekSummary.innerHTML = "<strong>Week " + escapeHtml(state.weekType) + " routine</strong><ul>" + items.map(function (item) {
       return "<li>" + escapeHtml(item) + "</li>";
-    }).join("") + "</ul>";
+    }).join("") + "</ul><p class=\"muted-copy\">" + total + " recurring item" + (total === 1 ? "" : "s") + " this week.</p>";
   }
 
   function renderDaySelector() {
@@ -398,33 +394,34 @@
   }
 
   function renderGlance() {
-    var jahHome = state.weekType === "A" ? "Friday" : "Tuesday";
-    var fridayDrop = state.weekType === "A" ? "Jah" : "Keith";
+    var schedule = getSchedule(state.weekType);
+    var flat = [];
+    schedule.forEach(function (day, dayIndex) {
+      day.events.forEach(function (item) {
+        flat.push({ item: item, day: DAY_SHORT[dayIndex] });
+      });
+    });
+
+    function linesFor(test) {
+      var seen = {};
+      return flat.filter(function (row) { return test(row.item); }).map(function (row) {
+        var line = row.day + ": " + row.item.title;
+        if (seen[line]) { return null; }
+        seen[line] = true;
+        return line;
+      }).filter(Boolean).slice(0, 5);
+    }
+
     var glance = [
-      {
-        icon: "\uD83D\uDC68",
-        title: "Keith",
-        items: ["Office: Mon, Wed and Fri", "WFH: Tue and Thu", "Kayaking: Tue and Thu", "Bedtime: Mon, Wed and Fri"]
-      },
-      {
-        icon: "\uD83D\uDC69",
-        title: "Jah",
-        items: ["Day off: Wednesday", "WFH: " + jahHome, "Pickup: Tue to Fri", "Bedtime: Tue and Thu"]
-      },
-      {
-        icon: "\uD83D\uDC67",
-        title: "Angela",
-        items: ["Nursery: Mon, Tue, Thu and Fri", "Yiayia: Wednesday", "Friday drop-off: " + fridayDrop, "Pickup location shown each day"]
-      },
-      {
-        icon: "\uD83C\uDFE1",
-        title: "Home",
-        items: [state.weekType === "A" ? "Julie cleans this Friday" : "No cleaner this Friday", "One-off entries sync through Supabase", "Use the week arrows for dated plans"]
-      }
+      { icon: "\uD83D\uDC68", title: "Keith", items: linesFor(function (item) { return (item.owner || "").toLowerCase() === "keith"; }) },
+      { icon: "\uD83D\uDC69", title: "Jah", items: linesFor(function (item) { return (item.owner || "").toLowerCase() === "jah"; }) },
+      { icon: "\uD83D\uDC67", title: "Angela", items: linesFor(function (item) { return item.tags.indexOf("angela") !== -1; }) },
+      { icon: "\uD83C\uDFE1", title: "Home", items: linesFor(function (item) { return item.category === "home"; }) }
     ];
 
     elements.glanceGrid.innerHTML = glance.map(function (card) {
-      return "<article class=\"glance-card\"><span class=\"glance-icon\" aria-hidden=\"true\">" + escapeHtml(card.icon) + "</span><h3>" + escapeHtml(card.title) + "</h3><ul>" + card.items.map(function (item) { return "<li>" + escapeHtml(item) + "</li>"; }).join("") + "</ul></article>";
+      var items = card.items.length ? card.items : ["No recurring items for this week."];
+      return "<article class=\"glance-card\"><span class=\"glance-icon\" aria-hidden=\"true\">" + escapeHtml(card.icon) + "</span><h3>" + escapeHtml(card.title) + "</h3><ul>" + items.map(function (item) { return "<li>" + escapeHtml(item) + "</li>"; }).join("") + "</ul></article>";
     }).join("");
   }
 
@@ -438,6 +435,11 @@
       stateName = "ready";
       title = "Shared calendar connected";
       message = state.calendarEntries.length + " saved entr" + (state.calendarEntries.length === 1 ? "y" : "ies") + " loaded from calendar_entries.";
+      if (state.recurringReady) {
+        message += " " + state.recurringTasks.filter(function (task) { return task.active !== false; }).length + " recurring tasks loaded.";
+      } else if (state.recurringError) {
+        message += " Recurring tasks are using the built-in fallback until recurring_tasks is set up.";
+      }
       footer = "Last refreshed " + formatDate(new Date(), { hour: "2-digit", minute: "2-digit" });
     } else if (state.calendarError) {
       stateName = "error";
@@ -454,6 +456,44 @@
   }
 
   function getSchedule(weekType) {
+    if (!state.recurringReady) {
+      return getDefaultSchedule(weekType);
+    }
+    var days = DAY_NAMES.map(function (name) { return { name: name, events: [] }; });
+    state.recurringTasks.filter(function (task) {
+      if (task.active === false) { return false; }
+      var pattern = String(task.week_pattern || "EVERY").toUpperCase();
+      return pattern === "EVERY" || pattern === weekType;
+    }).sort(function (a, b) {
+      return Number(a.sort_order || 0) - Number(b.sort_order || 0) || Number(a.id || 0) - Number(b.id || 0);
+    }).forEach(function (task) {
+      var dayIndex = Number(task.day_of_week) - 1;
+      if (dayIndex < 0 || dayIndex > 4) { return; }
+      var category = normaliseCategory(task.category);
+      var tags = Array.isArray(task.tags) ? task.tags.map(function (tag) { return String(tag).toLowerCase(); }) : [];
+      var owner = task.owner || "Shared";
+      if (owner) { tags.push(String(owner).toLowerCase()); }
+      tags.push(category);
+      days[dayIndex].events.push(eventItem(
+        task.period || periodForTime(task.event_time),
+        iconForRoutine(task.icon_key, category),
+        task.title || "Recurring task",
+        owner,
+        category,
+        unique(tags),
+        task.detail || "Managed from Routine settings."
+      ));
+    });
+    return days;
+  }
+
+  function iconForRoutine(iconKey, category) {
+    var key = String(iconKey || "").toLowerCase();
+    if (key && ICONS[key]) { return ICONS[key]; }
+    return iconForCategory(category);
+  }
+
+  function getDefaultSchedule(weekType) {
     var tuesdayDropper = weekType === "A" ? "Keith" : "Jah";
     var fridayDropper = weekType === "A" ? "Jah" : "Keith";
     var tuesdayJahWork = weekType === "B" ? "Work from home" : "Work away from home";
@@ -619,8 +659,33 @@
     }
 
     state.repository = new AdaptiveCalendarRepository(client);
-    await loadCalendarEntries();
+    state.recurringRepository = new RecurringTaskRepository(client);
+    await Promise.all([loadCalendarEntries(), loadRecurringTasks()]);
   }
+
+  async function loadRecurringTasks() {
+    if (!state.recurringRepository) { return; }
+    try {
+      state.recurringTasks = await state.recurringRepository.list();
+      state.recurringReady = true;
+      state.recurringError = "";
+    } catch (error) {
+      state.recurringReady = false;
+      state.recurringError = error && error.message ? String(error.message) : "Recurring tasks are unavailable.";
+    }
+    renderAll();
+  }
+
+  function RecurringTaskRepository(client) {
+    this.client = client;
+    this.tableName = "recurring_tasks";
+  }
+
+  RecurringTaskRepository.prototype.list = async function () {
+    var result = await this.client.from(this.tableName).select("*").order("day_of_week", { ascending: true }).order("sort_order", { ascending: true });
+    if (result.error) { throw result.error; }
+    return result.data || [];
+  };
 
   async function loadCalendarEntries() {
     if (!state.repository) {

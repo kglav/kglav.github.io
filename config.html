@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f1e8">
+  <meta name="description" content="Manage Keith and Jah's recurring household routine.">
+  <title>Routine Settings - Keith &amp; Jah's Week</title>
+  <script>document.documentElement.classList.add('auth-pending');</script>
+  <link rel="stylesheet" href="./assets/site.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="./assets/supabase-config.js"></script>
+  <script defer src="./assets/auth.js"></script>
+  <script defer src="./assets/config.js"></script>
+</head>
+<body class="calendar-page config-page">
+  <div class="ambient-orb ambient-orb-one" aria-hidden="true"></div>
+  <div class="ambient-orb ambient-orb-two" aria-hidden="true"></div>
+
+  <div class="page-shell">
+    <header class="calendar-hero config-hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-dot"></span> Routine settings</p>
+        <h1>Weekly routine</h1>
+        <p class="hero-subtitle">Change a repeating task once and the calendar follows it everywhere.</p>
+        <div class="hero-meta"><span>Monday to Friday</span><span aria-hidden="true">&middot;</span><span>Week A / Week B</span></div>
+      </div>
+      <div class="hero-controls">
+        <button class="primary-button" id="addRoutineButton" type="button"><span aria-hidden="true">+</span>Add recurring task</button>
+        <a class="soft-button link-button" href="./index.html">&larr; Back to calendar</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="connection-strip" id="routineConnection" data-state="loading" aria-live="polite">
+        <span class="connection-light" aria-hidden="true"></span>
+        <div><strong id="routineConnectionTitle">Connecting to recurring tasks</strong><span id="routineConnectionMessage">Loading the shared routine from Supabase.</span></div>
+        <button class="text-button" id="refreshRoutineButton" type="button">Refresh</button>
+      </section>
+
+      <section class="panel config-intro-panel">
+        <div>
+          <p class="section-kicker">How this works</p>
+          <h2>One row = one repeating calendar item</h2>
+          <p class="muted-copy">Edit the day, owner, week pattern or details here. The home calendar reads these rows directly. One-off calendar entries still use the existing <code>calendar_entries</code> table and are still added from the home page.</p>
+        </div>
+        <div class="config-filter-row">
+          <label class="field config-filter-field"><span>Show</span><select id="routineFilter"><option value="all">All tasks</option><option value="active">Active only</option><option value="inactive">Inactive only</option><option value="A">Week A specific</option><option value="B">Week B specific</option></select></label>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading-row"><div><p class="section-kicker">Recurring routine</p><h2 class="section-title">Tasks by day</h2></div><div class="week-range-pill" id="routineCountPill">0 tasks</div></div>
+        <div class="config-days" id="routineList"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><span>Routine settings</span><span>Changes save directly to Supabase</span></footer>
+  </div>
+
+  <div class="modal-backdrop" id="routineModal" hidden>
+    <section class="modal-card config-modal-card" role="dialog" aria-modal="true" aria-labelledby="routineModalTitle">
+      <div class="modal-header"><div><p class="section-kicker">Recurring routine</p><h2 id="routineModalTitle">Add recurring task</h2></div><button class="icon-button modal-close" type="button" data-close-routine aria-label="Close">&times;</button></div>
+      <form id="routineForm" novalidate>
+        <input type="hidden" id="routineId">
+        <div class="form-grid">
+          <label class="field field-wide"><span>Title</span><input id="routineTitle" type="text" maxlength="120" required placeholder="Nursery pickup, kayaking, cleaner..."></label>
+          <label class="field"><span>Day</span><select id="routineDay" required><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option></select></label>
+          <label class="field"><span>Week pattern</span><select id="routineWeek"><option value="EVERY">Every week</option><option value="A">Week A only</option><option value="B">Week B only</option></select></label>
+          <label class="field"><span>Part of day</span><select id="routinePeriod"><option value="morning">Morning</option><option value="daytime">Daytime</option><option value="afternoon">Afternoon</option><option value="evening">Evening</option><option value="bedtime">Bedtime</option></select></label>
+          <label class="field"><span>Exact time <em>optional</em></span><input id="routineTime" type="time"></label>
+          <label class="field"><span>Person / owner</span><input id="routineOwner" type="text" maxlength="80" placeholder="Keith, Jah, Julie..."></label>
+          <label class="field"><span>Category</span><select id="routineCategory"><option value="family">Family</option><option value="childcare">Childcare</option><option value="work">Work</option><option value="home">Home</option><option value="activity">Activity</option><option value="other">Other</option></select></label>
+          <label class="field"><span>Icon</span><select id="routineIcon"><option value="calendar">Calendar</option><option value="nursery">Nursery / school</option><option value="pickup">Pickup</option><option value="yiayia">Yiayia</option><option value="office">Office</option><option value="home">Home</option><option value="work">Work</option><option value="dayoff">Day off</option><option value="kayak">Kayak</option><option value="bedtime">Bedtime</option><option value="clean">Cleaning</option><option value="family">Family</option></select></label>
+          <label class="field field-wide"><span>Tags <em>optional, comma separated</em></span><input id="routineTags" type="text" maxlength="250" placeholder="angela, childcare, keith"></label>
+          <label class="field field-wide"><span>Detail <em>optional</em></span><textarea id="routineDetail" rows="3" maxlength="1000" placeholder="Extra detail shown when the calendar item is opened."></textarea></label>
+          <label class="toggle-field field-wide"><input id="routineActive" type="checkbox" checked><span><strong>Active</strong><small>Inactive tasks stay saved here but disappear from the home calendar.</small></span></label>
+        </div>
+        <p class="form-message" id="routineFormMessage" aria-live="polite"></p>
+        <div class="modal-actions"><button class="danger-button" id="deleteRoutineButton" type="button" hidden>Delete task</button><span class="modal-action-spacer"></span><button class="soft-button" type="button" data-close-routine>Cancel</button><button class="primary-button" id="saveRoutineButton" type="submit">Save task</button></div>
+      </form>
+    </section>
+  </div>
+</body>
+</html>
