@@ -1,0 +1,112 @@
+version: 1
+
+household_chore_plan:
+  name: "Household Chore Planner"
+  purpose: "Source-of-truth chore list for use in the household website/project."
+
+  daily:
+    - id: daily_kitchen_reset
+      title: "Kitchen reset"
+      description: "Load/run the dishwasher, clear counters, and deal with stray dishes."
+      timing: "Evening close-down"
+      target_completion: "Before 21:30"
+
+    - id: daily_cat_trays
+      title: "Cat trays"
+      description: "Scoop the litter trays."
+      timing: "Daily"
+
+    - id: daily_toy_living_room_sweep
+      title: "Toy / living-room sweep"
+      description: "Quick shared tidy of toys and stray items."
+      timing: "Evening close-down"
+      estimated_minutes: 5
+
+    - id: daily_dinner_plan
+      title: "Dinner plan / cooking"
+      description: "On nights both adults are home for dinner, decide in advance who is cooking."
+      conditional: true
+      condition: "Both adults are home for dinner"
+
+  weekly:
+    - id: weekly_laundry_hamper_1
+      title: "Laundry - Hamper 1"
+      description: "Angela's clothes and household bedding."
+      category: "laundry"
+
+    - id: weekly_laundry_hamper_2
+      title: "Laundry - Hamper 2"
+      description: "Jo's and the other adult's clothes."
+      category: "laundry"
+
+    - id: weekly_bins
+      title: "Rubbish / recycling"
+      description: "Put out the correct bin."
+      schedule:
+        day: "Wednesday"
+        timing: "Evening"
+        rotation: "Alternate recycling and regular waste"
+
+    - id: weekly_food_shop
+      title: "Weekly food shop"
+      description: "Complete the household food shop for the week."
+
+    - id: weekly_bathroom_shelf_tidy
+      title: "Bathroom shelf tidy"
+      description: "Quick straighten of bathroom shelf/products; deep cleaning is handled by the biweekly cleaner."
+      estimated_minutes: 5
+
+  monthly:
+    - id: monthly_cat_tray_full_change
+      title: "Cat tray full change"
+      description: "Empty, clean, and refill the litter trays."
+      schedule:
+        preferred: "First weekend of each month"
+        fallback: "Following weekend if there is a preplanned event"
+
+    - id: monthly_declutter
+      title: "Declutter / organisation pass"
+      description: "Reduce and organise belongings to lower the ongoing chore burden."
+
+    - id: monthly_appliance_deep_clean
+      title: "Appliance deep clean"
+      description: "Clean the oven, microwave, and dishwasher filter."
+
+    - id: monthly_windows_fixtures
+      title: "Windows and fixtures"
+      description: "Clean blinds, skirting boards, and interior glass."
+
+  optional:
+    - id: optional_midweek_laundry
+      title: "Midweek laundry shortcut"
+      description: "Run a wash midweek, dry it, and put the clean unfolded clothes into a hamper to fold at the weekend."
+      category: "laundry"
+
+  setup_and_one_off:
+    - id: setup_reduce_kitchen_inventory
+      title: "Reduce kitchen inventory"
+      description: "Keep fewer dishes and cookware in active circulation to reduce dish buildup."
+
+    - id: setup_robot_vacuums
+      title: "Set up robot vacuums"
+      description: "Set up two robot vacuums: one upstairs and one downstairs."
+
+    - id: setup_declutter_day
+      title: "Dedicated declutter day"
+      description: "Aggressive household declutter day."
+      schedule:
+        date_text: "Wednesday 11th"
+        note: "Time off work booked"
+
+  external_cleaning:
+    frequency: "Biweekly"
+    handles:
+      - "Bathroom deep cleaning"
+      - "Dusting and surface cleaning"
+      - "Regular floor cleaning"
+
+  routine_notes:
+    - "Daily close-down tasks should be completed before 21:30."
+    - "The goal is to reduce chore volume as well as complete chores."
+    - "Laundry is split into two hampers to reduce sorting effort."
+    - "Robot vacuums are intended to reduce manual floor upkeep."

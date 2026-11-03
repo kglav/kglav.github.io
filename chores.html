@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f1e8">
+  <meta name="description" content="Keith and Jah's shared household chore checklist.">
+  <title>Household Chores - Keith &amp; Jah</title>
+  <script>document.documentElement.classList.add('auth-pending');</script>
+  <link rel="stylesheet" href="./assets/site.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="./assets/supabase-config.js"></script>
+  <script defer src="./assets/auth.js"></script>
+  <script defer src="./assets/chores.js"></script>
+</head>
+<body class="calendar-page chores-page">
+  <div class="ambient-orb ambient-orb-one" aria-hidden="true"></div>
+  <div class="ambient-orb ambient-orb-two" aria-hidden="true"></div>
+
+  <div class="page-shell">
+    <header class="calendar-hero chores-hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-dot"></span> Household chores</p>
+        <h1>Shared checklist</h1>
+        <p class="hero-subtitle">A simple place to see what needs doing, check it off, and record who did it.</p>
+        <div class="hero-meta"><span id="chorePeriodLabel">Today</span><span aria-hidden="true">&middot;</span><span>Saved in Supabase</span></div>
+      </div>
+      <div class="hero-controls">
+        <button class="primary-button" id="addChoreButton" type="button"><span aria-hidden="true">+</span>Add chore</button>
+        <a class="soft-button link-button" href="./index.html">&larr; Back to calendar</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="connection-strip" id="choreConnection" data-state="loading" aria-live="polite">
+        <span class="connection-light" aria-hidden="true"></span>
+        <div><strong id="choreConnectionTitle">Connecting to chores</strong><span id="choreConnectionMessage">Loading the shared checklist from Supabase.</span></div>
+        <button class="text-button" id="refreshChoresButton" type="button">Refresh</button>
+      </section>
+
+      <section class="panel chore-toolbar">
+        <div class="chore-tabs" id="choreTabs" aria-label="Chore section">
+          <button type="button" data-cadence="daily">Daily</button>
+          <button type="button" data-cadence="weekly">Weekly</button>
+          <button type="button" data-cadence="monthly">Monthly</button>
+          <button type="button" data-cadence="optional">Optional</button>
+          <button type="button" data-cadence="one_off">One-off</button>
+        </div>
+        <div class="chore-cycle-nav" id="choreCycleNav">
+          <button class="icon-button" id="previousChorePeriod" type="button" aria-label="Previous period">&larr;</button>
+          <button class="soft-button" id="currentChorePeriod" type="button">Current</button>
+          <button class="icon-button" id="nextChorePeriod" type="button" aria-label="Next period">&rarr;</button>
+        </div>
+      </section>
+
+      <section class="chore-layout section-block">
+        <article class="panel chore-main-panel">
+          <div class="panel-heading chore-heading">
+            <div>
+              <p class="section-kicker" id="choreSectionKicker">Daily chores</p>
+              <h2 id="choreSectionTitle">Today's checklist</h2>
+              <p class="muted-copy" id="choreSectionDescription">Recurring tasks for today.</p>
+            </div>
+            <div class="chore-progress-copy"><strong id="choreProgressText">0 of 0 done</strong><span class="chore-progress-track"><span id="choreProgressBar"></span></span></div>
+          </div>
+          <div class="chore-list" id="choreList"></div>
+          <div class="chore-panel-actions"><button class="small-button" id="addChoreInline" type="button">+ Add to this section</button></div>
+        </article>
+
+        <aside class="chore-sidebar">
+          <article class="panel chore-summary-card">
+            <p class="section-kicker">This cycle</p>
+            <h2>Progress</h2>
+            <div class="chore-big-progress"><strong id="chorePercent">0%</strong><span id="choreSummaryText">Nothing checked off yet</span></div>
+          </article>
+          <article class="panel chore-summary-card">
+            <p class="section-kicker">Completed by</p>
+            <h2>People</h2>
+            <div class="chore-people" id="chorePeople"></div>
+          </article>
+          <article class="panel chore-summary-card chore-notes-card">
+            <p class="section-kicker">Planner notes</p>
+            <h2>Keep it manageable</h2>
+            <ul>
+              <li>Daily close-down tasks should be completed before 21:30.</li>
+              <li>The goal is to reduce chore volume as well as complete chores.</li>
+              <li>Laundry is split into two hampers to reduce sorting effort.</li>
+              <li>Robot vacuums are intended to reduce manual floor upkeep.</li>
+            </ul>
+          </article>
+          <article class="panel chore-summary-card external-cleaning-card">
+            <p class="section-kicker">External cleaning</p>
+            <h2>Biweekly cleaner</h2>
+            <ul><li>Bathroom deep cleaning</li><li>Dusting and surface cleaning</li><li>Regular floor cleaning</li></ul>
+          </article>
+        </aside>
+      </section>
+    </main>
+
+    <footer class="site-footer"><span>Shared household chores</span><span>Checklist history saved in Supabase</span></footer>
+  </div>
+
+  <div class="modal-backdrop" id="choreModal" hidden>
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="choreModalTitle">
+      <div class="modal-header"><div><p class="section-kicker">Chore list</p><h2 id="choreModalTitle">Add chore</h2></div><button class="icon-button modal-close" type="button" data-close-chore aria-label="Close">&times;</button></div>
+      <form id="choreForm" novalidate>
+        <input type="hidden" id="choreId">
+        <div class="form-grid">
+          <label class="field field-wide"><span>Task</span><input id="choreTitle" type="text" maxlength="160" required placeholder="What needs doing?"></label>
+          <label class="field"><span>Section</span><select id="choreCadence"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="optional">Optional</option><option value="one_off">One-off</option></select></label>
+          <label class="field"><span>Assigned to</span><select id="choreAssigned"><option value="">Shared / anyone</option><option value="Keith">Keith</option><option value="Jah">Jah</option></select></label>
+          <label class="field field-wide"><span>Description <em>optional</em></span><textarea id="choreDescription" rows="3" maxlength="1000"></textarea></label>
+          <label class="field"><span>Timing <em>optional</em></span><input id="choreTiming" type="text" maxlength="120" placeholder="Evening close-down"></label>
+          <label class="field"><span>Target <em>optional</em></span><input id="choreTarget" type="text" maxlength="120" placeholder="Before 21:30"></label>
+          <label class="field field-wide"><span>Extra note / condition <em>optional</em></span><input id="choreCondition" type="text" maxlength="250" placeholder="Only when both adults are home for dinner"></label>
+        </div>
+        <p class="form-message" id="choreFormMessage" aria-live="polite"></p>
+        <div class="modal-actions"><button class="danger-button" id="deleteChoreButton" type="button" hidden>Delete chore</button><span class="modal-action-spacer"></span><button class="soft-button" type="button" data-close-chore>Cancel</button><button class="primary-button" id="saveChoreButton" type="submit">Save chore</button></div>
+      </form>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="completeChoreModal" hidden>
+    <section class="modal-card complete-chore-card" role="dialog" aria-modal="true" aria-labelledby="completeChoreTitle">
+      <div class="modal-header"><div><p class="section-kicker">Check off chore</p><h2 id="completeChoreTitle">Who completed it?</h2></div><button class="icon-button modal-close" type="button" data-close-complete aria-label="Close">&times;</button></div>
+      <p class="muted-copy" id="completeChoreName"></p>
+      <div class="completion-people">
+        <button type="button" data-completed-by="Keith"><span>K</span>Keith</button>
+        <button type="button" data-completed-by="Jah"><span>J</span>Jah</button>
+      </div>
+      <label class="field completion-other-field"><span>Or another name</span><div class="completion-other-row"><input id="completionOtherName" type="text" maxlength="80" placeholder="Name"><button class="small-button" id="completeOtherButton" type="button">Mark done</button></div></label>
+      <p class="form-message" id="completeFormMessage" aria-live="polite"></p>
+    </section>
+  </div>
+</body>
+</html>

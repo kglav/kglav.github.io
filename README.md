@@ -159,3 +159,16 @@ This package includes a lightweight browser-side password gate on both the calen
 - The password itself is not stored as plain text in the site; `assets/auth.js` contains only its SHA-256 hash.
 
 This is intentionally only a first-line privacy measure for a static GitHub Pages preview. A determined technical user can still bypass client-side protection by inspecting or changing the site's JavaScript.
+
+## Household chores page
+
+`chores.html` is a separate household checklist reached from the 🤝 button on the calendar home page. It does not use or alter `calendar_entries` or `recurring_tasks`.
+
+Before using it, run `chores-setup.sql` once in the Supabase SQL Editor. It creates only `chore_tasks` and `chore_completions`, then seeds the chore definitions from `household_chore_list.yml` used for this build.
+
+- `chore_tasks` stores the editable Daily, Weekly, Monthly, Optional and One-off task definitions.
+- `chore_completions` stores who checked a task off and for which day/week/month (or `once` for one-off tasks).
+- Daily completions reset by date, weekly/optional completions by Monday-based week, monthly completions by month, while one-off jobs stay complete until manually unchecked.
+- Tasks can be added, edited or deleted from the chores page. Deleting a task also deletes its completion history.
+
+The chores tables use the same anonymous browser-access pattern as the other simple household tables. The site's shared password remains a convenience barrier rather than strong authentication.
