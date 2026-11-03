@@ -23,6 +23,7 @@
   function bind() {
     el.refreshChoresButton.addEventListener("click", load);
     el.choreTabs.addEventListener("click", function(e){ var b=e.target.closest("[data-cadence]"); if(!b)return; state.cadence=b.dataset.cadence; render(); });
+    document.querySelectorAll("[data-cadence-jump]").forEach(function(b){ b.addEventListener("click", function(){ state.cadence=b.dataset.cadenceJump; render(); }); });
     el.previousChorePeriod.addEventListener("click", function(){ movePeriod(-1); });
     el.nextChorePeriod.addEventListener("click", function(){ movePeriod(1); });
     el.currentChorePeriod.addEventListener("click", function(){ state.anchor=startOfDay(new Date()); render(); });
@@ -63,25 +64,42 @@
     var tasks=visibleTasks(); var key=periodKey();
     var completed=tasks.filter(function(t){return completionFor(t.id,key);});
     el.choreProgressText.textContent=completed.length+" of "+tasks.length+" done";
-    var pct=tasks.length?Math.round(completed.length/tasks.length*100):0; el.choreProgressBar.style.width=pct+"%"; el.chorePercent.textContent=pct+"%";
-    el.choreSummaryText.textContent=tasks.length?(completed.length+" of "+tasks.length+" completed"):"No chores in this section";
+    var pct=tasks.length?Math.round(completed.length/tasks.length*100):0; el.choreProgressBar.style.width=pct+"%";
     el.choreList.innerHTML=tasks.length?tasks.map(function(t){return taskHtml(t,key);}).join(""):'<div class="chore-empty"><strong>No chores here yet.</strong><span>Use “Add to this section” to create one.</span></div>';
-    renderPeople(completed,key);
+    renderOverallSummary();
+    renderGlance();
   }
-  function visibleTasks(){ return state.tasks.filter(function(t){return t.active!==false && t.cadence===state.cadence;}); }
+  function visibleTasks(){ return tasksFor(state.cadence); }
+  function tasksFor(cadence){ return state.tasks.filter(function(t){return t.active!==false && t.cadence===cadence;}); }
   function taskHtml(task,key){
     var c=completionFor(task.id,key); var done=!!c; var details=[task.timing,task.target_completion].filter(Boolean).join(" · ");
     return '<article class="chore-row '+(done?'is-complete':'')+'"><button class="chore-check" type="button" data-check-chore="'+escAttr(task.id)+'" aria-label="'+(done?'Undo':'Complete')+' '+escAttr(task.title)+'"><span>'+(done?'✓':'')+'</span></button><div class="chore-row-copy"><strong>'+esc(task.title)+'</strong>'+(task.description?'<p>'+esc(task.description)+'</p>':'')+(task.condition_text?'<small class="chore-condition">'+esc(task.condition_text)+'</small>':'')+'</div><div class="chore-row-meta"><span>'+(task.assigned_to?esc(task.assigned_to):'Shared')+'</span>'+(details?'<small>'+esc(details)+'</small>':'')+'</div><div class="chore-done-by">'+(done?'<span class="person-badge">'+esc(initials(c.completed_by))+'</span><strong>'+esc(c.completed_by)+'</strong><small>'+esc(completedTime(c.completed_at))+'</small>':'<span class="muted-copy">Not done</span>')+'</div><button class="chore-edit-button" type="button" data-edit-chore="'+escAttr(task.id)+'" aria-label="Edit '+escAttr(task.title)+'">Edit</button></article>';
   }
-  function renderPeople(completed,key){
-    var counts={}; completed.forEach(function(t){var c=completionFor(t.id,key); if(c)counts[c.completed_by]=(counts[c.completed_by]||0)+1;});
-    var names=Object.keys(counts); el.chorePeople.innerHTML=names.length?names.map(function(n){return '<div><span class="person-badge">'+esc(initials(n))+'</span><strong>'+esc(n)+'</strong><small>'+counts[n]+' done</small></div>';}).join(""):'<p class="muted-copy">No completions yet.</p>';
+  function renderOverallSummary(){
+    var active=state.tasks.filter(function(t){return t.active!==false;});
+    var current=[];
+    active.forEach(function(t){ var c=completionFor(t.id,periodKeyFor(t.cadence)); if(c)current.push(c); });
+    var pct=active.length?Math.round(current.length/active.length*100):0;
+    el.chorePercent.textContent=pct+"%";
+    el.choreSummaryText.textContent=active.length?(current.length+" of "+active.length+" active chores completed"):"No active chores";
+    var counts={}; current.forEach(function(c){ if(c.completed_by)counts[c.completed_by]=(counts[c.completed_by]||0)+1; });
+    var names=Object.keys(counts);
+    el.chorePeople.innerHTML=names.length?names.map(function(n){return '<div><span class="person-badge">'+esc(initials(n))+'</span><strong>'+esc(n)+'</strong><small>'+counts[n]+' done</small></div>';}).join(""):'<p class="muted-copy">No completions yet.</p>';
+  }
+  function renderGlance(){
+    var ids={weekly:"weeklyGlanceCount",monthly:"monthlyGlanceCount",optional:"optionalGlanceCount",one_off:"oneOffGlanceCount"};
+    Object.keys(ids).forEach(function(cadence){
+      var tasks=tasksFor(cadence), key=periodKeyFor(cadence), done=tasks.filter(function(t){return completionFor(t.id,key);}).length;
+      var node=document.getElementById(ids[cadence]); if(node)node.textContent=done+" of "+tasks.length+" done";
+    });
+    document.querySelectorAll("[data-cadence-jump]").forEach(function(b){ b.classList.toggle("is-active",b.dataset.cadenceJump===state.cadence); });
   }
   function completionFor(taskId,key){ return state.completions.find(function(c){return String(c.task_id)===String(taskId)&&c.period_key===key;}); }
-  function periodKey(){
-    if(state.cadence==="one_off")return "once";
-    if(state.cadence==="daily")return isoDate(state.anchor);
-    if(state.cadence==="weekly"||state.cadence==="optional")return isoDate(startOfWeek(state.anchor));
+  function periodKey(){ return periodKeyFor(state.cadence); }
+  function periodKeyFor(cadence){
+    if(cadence==="one_off")return "once";
+    if(cadence==="daily")return isoDate(state.anchor);
+    if(cadence==="weekly"||cadence==="optional")return isoDate(startOfWeek(state.anchor));
     return state.anchor.getFullYear()+"-"+String(state.anchor.getMonth()+1).padStart(2,"0");
   }
   function periodLabel(){

@@ -8,6 +8,7 @@
   <title>Household Chores - Keith &amp; Jah</title>
   <script>document.documentElement.classList.add('auth-pending');</script>
   <link rel="stylesheet" href="./assets/site.css">
+  <link rel="stylesheet" href="./assets/chores-tablet.css">
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="./assets/supabase-config.js"></script>
   <script defer src="./assets/auth.js"></script>
@@ -21,8 +22,8 @@
     <header class="calendar-hero chores-hero">
       <div class="hero-copy">
         <p class="eyebrow"><span class="eyebrow-dot"></span> Household chores</p>
-        <h1>Shared checklist</h1>
-        <p class="hero-subtitle">A simple place to see what needs doing, check it off, and record who did it.</p>
+        <h1>Household Chores</h1>
+        <p class="hero-subtitle">Our shared chore planner &amp; checklist.</p>
         <div class="hero-meta"><span id="chorePeriodLabel">Today</span><span aria-hidden="true">&middot;</span><span>Saved in Supabase</span></div>
       </div>
       <div class="hero-controls">
@@ -69,8 +70,8 @@
 
         <aside class="chore-sidebar">
           <article class="panel chore-summary-card">
-            <p class="section-kicker">This cycle</p>
-            <h2>Progress</h2>
+            <p class="section-kicker">At a glance</p>
+            <h2>Overall progress</h2>
             <div class="chore-big-progress"><strong id="chorePercent">0%</strong><span id="choreSummaryText">Nothing checked off yet</span></div>
           </article>
           <article class="panel chore-summary-card">
@@ -95,10 +96,31 @@
           </article>
         </aside>
       </section>
+
+      <section class="chore-glance-strip" aria-label="Chore section summaries">
+        <button type="button" class="chore-glance-card" data-cadence-jump="weekly">
+          <span class="chore-glance-icon" aria-hidden="true">&#128197;</span><span><strong>Weekly</strong><small id="weeklyGlanceCount">0 of 0 done</small></span><span class="chore-glance-arrow" aria-hidden="true">&#8250;</span>
+        </button>
+        <button type="button" class="chore-glance-card" data-cadence-jump="monthly">
+          <span class="chore-glance-icon" aria-hidden="true">&#128198;</span><span><strong>Monthly</strong><small id="monthlyGlanceCount">0 of 0 done</small></span><span class="chore-glance-arrow" aria-hidden="true">&#8250;</span>
+        </button>
+        <button type="button" class="chore-glance-card" data-cadence-jump="optional">
+          <span class="chore-glance-icon" aria-hidden="true">&#11088;</span><span><strong>Optional</strong><small id="optionalGlanceCount">0 of 0 done</small></span><span class="chore-glance-arrow" aria-hidden="true">&#8250;</span>
+        </button>
+        <button type="button" class="chore-glance-card" data-cadence-jump="one_off">
+          <span class="chore-glance-icon" aria-hidden="true">&#128736;</span><span><strong>Setup / One-off</strong><small id="oneOffGlanceCount">0 of 0 done</small></span><span class="chore-glance-arrow" aria-hidden="true">&#8250;</span>
+        </button>
+      </section>
     </main>
 
     <footer class="site-footer"><span>Shared household chores</span><span>Checklist history saved in Supabase</span></footer>
   </div>
+
+  <nav class="chore-tablet-dock" aria-label="Household tools">
+    <a class="is-current" href="./chores.html" aria-label="Household chores" title="Household chores">&#129309;</a>
+    <a href="./config.html" aria-label="Routine settings" title="Routine settings">&#9881;&#65039;</a>
+    <a href="./games.html" aria-label="Game catalogue" title="Game catalogue">&#127918;</a>
+  </nav>
 
   <div class="modal-backdrop" id="choreModal" hidden>
     <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="choreModalTitle">
