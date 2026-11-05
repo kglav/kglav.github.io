@@ -214,3 +214,62 @@
   .chores-page .chore-assignment-button,.chores-page .chore-status-button { width:100%; margin-top:4px; }
   .chores-page .completion-options,.chores-page .assignment-choice-grid { grid-template-columns:1fr; }
 }
+
+/* 2026-11: keep the tablet page fixed while allowing any number of chores. */
+@media (min-width: 900px) and (orientation: landscape) {
+  .chores-page .chore-main-panel {
+    overflow: hidden;
+  }
+
+  .chores-page .chore-list {
+    /* Rows keep a readable/touchable height instead of being squeezed to fit. */
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-auto-rows: minmax(72px, auto);
+    align-content: start;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    scrollbar-gutter: stable;
+    padding-right: 3px;
+  }
+
+  .chores-page .chore-row {
+    min-height: 72px;
+    height: auto;
+    align-items: center;
+  }
+
+  .chores-page .chore-panel-actions {
+    position: relative;
+    z-index: 2;
+    background: rgba(255, 253, 248, .96);
+    border-top: 1px solid rgba(56,57,49,.08);
+  }
+
+  .chores-page .chore-list::-webkit-scrollbar {
+    width: 10px;
+  }
+  .chores-page .chore-list::-webkit-scrollbar-track {
+    background: rgba(40, 49, 65, .06);
+    border-radius: 999px;
+  }
+  .chores-page .chore-list::-webkit-scrollbar-thumb {
+    background: rgba(124, 117, 151, .48);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: 999px;
+  }
+}
+
+@media (min-width: 900px) and (orientation: landscape) and (max-height: 720px) {
+  .chores-page .chore-list {
+    grid-auto-rows: minmax(64px, auto);
+  }
+  .chores-page .chore-row {
+    min-height: 64px;
+  }
+}
