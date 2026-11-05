@@ -74,7 +74,7 @@
   .chores-page .chore-progress-track { width:170px; height:7px; }
   .chores-page .chore-list { flex:1 1 auto; min-height:0; grid-auto-rows:minmax(52px,1fr); overflow:hidden; }
   .chores-page .chore-row {
-    min-height:0; grid-template-columns:46px minmax(210px,1.45fr) minmax(110px,.52fr) minmax(110px,.52fr) 50px;
+    min-height:0; grid-template-columns:44px minmax(180px,1.28fr) minmax(92px,.52fr) minmax(108px,.62fr) minmax(125px,.72fr) 48px;
     gap:8px; padding:6px 12px;
   }
   .chores-page .chore-check { width:42px; height:42px; border-radius:12px; touch-action:manipulation; }
@@ -154,4 +154,63 @@
 
 @media (max-width: 520px) {
   .chores-page .chore-glance-strip { grid-template-columns:1fr; }
+}
+
+/* Chore ownership + per-period assignment controls */
+.chores-page .chore-row.is-not-needed { background:rgba(234,235,239,.58); }
+.chores-page .chore-row.is-not-needed .chore-row-copy { opacity:.72; }
+.chores-page .chore-timing-inline { display:block; margin-top:3px; color:var(--ink-soft); font-size:.61rem; font-weight:700; }
+.chores-page .chore-owner-cell { min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:4px; }
+.chores-page .chore-owner-cell > small { color:var(--ink-soft); font-size:.57rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+.chores-page .owner-chip { max-width:100%; display:inline-flex; align-items:center; gap:5px; padding:4px 7px; border-radius:999px; background:rgba(221,237,222,.9); font-size:.66rem; font-weight:850; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.chores-page .owner-chip > span { flex:0 0 auto; display:grid; place-items:center; width:22px; height:22px; border-radius:50%; color:#fff; background:#62ad70; font-size:.58rem; }
+.chores-page .owner-chip.is-shared { background:rgba(232,228,246,.94); }
+.chores-page .owner-chip.is-shared > span { background:#7569ba; }
+.chores-page .chore-assignment-button,
+.chores-page .chore-status-button { min-width:0; min-height:42px; border:1px solid rgba(56,57,49,.12); border-radius:12px; background:rgba(248,249,252,.9); color:var(--ink); text-align:left; touch-action:manipulation; }
+.chores-page .chore-assignment-button { display:grid; grid-template-columns:1fr auto; grid-template-rows:auto auto; gap:1px 5px; align-items:center; padding:5px 7px; }
+.chores-page .chore-assignment-button small { grid-column:1 / -1; color:var(--ink-soft); font-size:.54rem; font-weight:750; }
+.chores-page .chore-assignment-button strong { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.66rem; }
+.chores-page .chore-assignment-button span { color:#6a63a3; font-size:.56rem; font-weight:850; }
+.chores-page .chore-assignment-button.has-override { border-color:rgba(124,117,151,.3); background:rgba(238,233,250,.94); }
+.chores-page .chore-completion-cell { min-width:0; }
+.chores-page .chore-status-button { width:100%; display:flex; align-items:center; gap:7px; padding:5px 7px; }
+.chores-page .chore-status-button > span:last-child { min-width:0; display:flex; flex-direction:column; }
+.chores-page .chore-status-button strong { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.66rem; }
+.chores-page .chore-status-button small { color:var(--ink-soft); font-size:.54rem; }
+.chores-page .chore-status-button.is-done { background:rgba(224,244,228,.9); border-color:rgba(75,149,88,.18); }
+.chores-page .chore-status-button.is-not-needed { background:rgba(236,237,241,.95); }
+.chores-page .status-dot { width:14px; height:14px; border:2px solid #a8afbc; border-radius:50%; }
+.chores-page .status-icon { display:grid!important; place-items:center; flex:0 0 auto; width:27px; height:27px; border-radius:50%; background:#e4e6eb; color:#6f7682; font-size:1rem; }
+.chores-page #choreAssignedOther { margin-top:7px; }
+.chores-page .completion-options { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.chores-page .completion-options .not-needed-option { background:rgba(239,240,244,.96); }
+.chores-page .assignment-choice-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; margin:16px 0; }
+.chores-page .assignment-choice-grid button { min-height:70px; display:flex; align-items:center; justify-content:center; gap:8px; border:1px solid rgba(56,57,49,.12); border-radius:16px; color:var(--ink); background:rgba(250,249,252,.96); font:inherit; touch-action:manipulation; }
+.chores-page .assignment-choice-grid button > span { display:grid; place-items:center; width:32px; height:32px; border-radius:50%; color:#fff; background:#7569ba; font-weight:900; }
+.chores-page .assignment-choice-grid button:first-child > span { background:#62ad70; }
+.chores-page .assignment-choice-grid button:nth-child(2) > span { background:#9764bc; }
+.chores-page .assign-chore-card { max-width:620px; }
+
+@media (min-width: 900px) {
+  .chores-page .chore-row-copy p { -webkit-line-clamp:1; }
+  .chores-page .chore-owner-cell > small,
+  .chores-page .chore-assignment-button small { display:none; }
+  .chores-page .chore-assignment-button { grid-template-rows:auto; }
+}
+
+@media (min-width: 900px) and (max-width: 1180px) {
+  .chores-page .chore-layout { grid-template-columns:minmax(0,1fr) minmax(220px,250px); }
+  .chores-page .chore-row { grid-template-columns:40px minmax(145px,1.2fr) minmax(80px,.48fr) minmax(92px,.56fr) minmax(112px,.68fr) 44px; gap:5px; padding-left:8px; padding-right:8px; }
+  .chores-page .owner-chip { padding-left:5px; padding-right:5px; }
+  .chores-page .chore-assignment-button,.chores-page .chore-status-button { padding-left:5px; padding-right:5px; }
+}
+
+@media (max-width: 899px), (orientation: portrait) {
+  .chores-page .chore-row { grid-template-columns:46px minmax(0,1fr) 48px; }
+  .chores-page .chore-owner-cell,.chores-page .chore-assignment-button,.chores-page .chore-completion-cell { grid-column:2 / 3; }
+  .chores-page .chore-edit-button { grid-column:3; grid-row:1; }
+  .chores-page .chore-owner-cell { margin-top:4px; }
+  .chores-page .chore-assignment-button,.chores-page .chore-status-button { width:100%; margin-top:4px; }
+  .chores-page .completion-options,.chores-page .assignment-choice-grid { grid-template-columns:1fr; }
 }

@@ -75,15 +75,15 @@
             <div class="chore-big-progress"><strong id="chorePercent">0%</strong><span id="choreSummaryText">Nothing checked off yet</span></div>
           </article>
           <article class="panel chore-summary-card">
-            <p class="section-kicker">Completed by</p>
-            <h2>People</h2>
+            <p class="section-kicker">Ongoing ownership</p>
+            <h2>Chore owners</h2>
             <div class="chore-people" id="chorePeople"></div>
           </article>
           <article class="panel chore-summary-card chore-notes-card">
             <p class="section-kicker">Planner notes</p>
             <h2>Keep it manageable</h2>
             <ul>
-              <li>Daily close-down tasks should be completed before 21:30.</li>
+              <li>Daily close-down tasks should be completed before 21:30.</li><li>Set an ongoing owner, or override it for a specific day/week/month.</li><li>Use “Not needed” when a chore does not apply for that cycle.</li>
               <li>The goal is to reduce chore volume as well as complete chores.</li>
               <li>Laundry is split into two hampers to reduce sorting effort.</li>
               <li>Robot vacuums are intended to reduce manual floor upkeep.</li>
@@ -130,7 +130,7 @@
         <div class="form-grid">
           <label class="field field-wide"><span>Task</span><input id="choreTitle" type="text" maxlength="160" required placeholder="What needs doing?"></label>
           <label class="field"><span>Section</span><select id="choreCadence"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="optional">Optional</option><option value="one_off">One-off</option></select></label>
-          <label class="field"><span>Assigned to</span><select id="choreAssigned"><option value="">Shared / anyone</option><option value="Keith">Keith</option><option value="Jah">Jah</option></select></label>
+          <label class="field"><span>Ongoing owner</span><select id="choreAssigned"><option value="">Shared / anyone</option><option value="Keith">Keith</option><option value="Jah">Jah</option><option value="__other__">Other person...</option></select><input id="choreAssignedOther" type="text" maxlength="80" placeholder="Owner name" hidden></label>
           <label class="field field-wide"><span>Description <em>optional</em></span><textarea id="choreDescription" rows="3" maxlength="1000"></textarea></label>
           <label class="field"><span>Timing <em>optional</em></span><input id="choreTiming" type="text" maxlength="120" placeholder="Evening close-down"></label>
           <label class="field"><span>Target <em>optional</em></span><input id="choreTarget" type="text" maxlength="120" placeholder="Before 21:30"></label>
@@ -144,14 +144,30 @@
 
   <div class="modal-backdrop" id="completeChoreModal" hidden>
     <section class="modal-card complete-chore-card" role="dialog" aria-modal="true" aria-labelledby="completeChoreTitle">
-      <div class="modal-header"><div><p class="section-kicker">Check off chore</p><h2 id="completeChoreTitle">Who completed it?</h2></div><button class="icon-button modal-close" type="button" data-close-complete aria-label="Close">&times;</button></div>
+      <div class="modal-header"><div><p class="section-kicker">Chore checklist</p><h2 id="completeChoreTitle">Mark chore as...</h2></div><button class="icon-button modal-close" type="button" data-close-complete aria-label="Close">&times;</button></div>
       <p class="muted-copy" id="completeChoreName"></p>
-      <div class="completion-people">
-        <button type="button" data-completed-by="Keith"><span>K</span>Keith</button>
+      <div class="completion-people completion-options">
         <button type="button" data-completed-by="Jah"><span>J</span>Jah</button>
+        <button type="button" data-completed-by="Keith"><span>K</span>Keith</button>
+        <button class="not-needed-option" id="completeNotNeededButton" type="button"><span>&#8856;</span>Not needed</button>
       </div>
-      <label class="field completion-other-field"><span>Or another name</span><div class="completion-other-row"><input id="completionOtherName" type="text" maxlength="80" placeholder="Name"><button class="small-button" id="completeOtherButton" type="button">Mark done</button></div></label>
+      <label class="field completion-other-field"><span>Or type another name</span><div class="completion-other-row"><input id="completionOtherName" type="text" maxlength="80" placeholder="Name"><button class="small-button" id="completeOtherButton" type="button">Mark done</button></div></label>
       <p class="form-message" id="completeFormMessage" aria-live="polite"></p>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="assignChoreModal" hidden>
+    <section class="modal-card assign-chore-card" role="dialog" aria-modal="true" aria-labelledby="assignChoreTitle">
+      <div class="modal-header"><div><p class="section-kicker">Plan ahead</p><h2 id="assignChoreTitle">Assign this occurrence</h2></div><button class="icon-button modal-close" type="button" data-close-assign aria-label="Close">&times;</button></div>
+      <p class="muted-copy"><strong id="assignChoreName"></strong><br><span id="assignPeriodLabel"></span></p>
+      <div class="assignment-choice-grid">
+        <button type="button" data-assigned-to="Keith"><span>K</span><strong>Keith</strong></button>
+        <button type="button" data-assigned-to="Jah"><span>J</span><strong>Jah</strong></button>
+        <button type="button" data-assigned-to="Shared"><span>S</span><strong>Shared</strong></button>
+      </div>
+      <label class="field completion-other-field"><span>Or type another name</span><div class="completion-other-row"><input id="assignmentOtherName" type="text" maxlength="80" placeholder="Name"><button class="small-button" id="assignOtherButton" type="button">Assign</button></div></label>
+      <p class="form-message" id="assignmentFormMessage" aria-live="polite"></p>
+      <div class="modal-actions"><button class="soft-button" id="clearAssignmentButton" type="button">Use ongoing owner</button><span class="modal-action-spacer"></span><button class="soft-button" type="button" data-close-assign>Cancel</button></div>
     </section>
   </div>
 </body>
