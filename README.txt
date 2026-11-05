@@ -1,16 +1,9 @@
-CHORES TABLET SCROLL PATCH
+Chores checklist scroll fix v2
 
-This patch changes only assets/chores-tablet.css.
-
-What it fixes:
-- The overall tablet page remains a fixed single-screen web app.
-- The chore rows are no longer compressed to force every task onto screen.
-- The checklist area scrolls internally with touch/swipe.
-- There is no four-task display limit: all tasks returned from Supabase remain in the list and can be reached by scrolling.
-- The Add button stays outside the scrolling area, so it remains accessible.
-
-GitHub update:
 Replace only:
+  chores.html
   assets/chores-tablet.css
 
 No Supabase changes are required.
+
+This version introduces a dedicated scroll viewport around the chore rows. On landscape tablets, the overall page remains fixed while the checklist can contain any number of rows and can be swiped/scrolled independently. The Add button remains fixed below the list.

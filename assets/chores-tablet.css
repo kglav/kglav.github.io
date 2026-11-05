@@ -215,61 +215,101 @@
   .chores-page .completion-options,.chores-page .assignment-choice-grid { grid-template-columns:1fr; }
 }
 
-/* 2026-11: keep the tablet page fixed while allowing any number of chores. */
+
+/* 2026-11-05 v2: dedicated inner scroll viewport for the checklist.
+   The previous version scrolled the dynamic grid itself; some tablet browsers
+   still allowed that grid to size to its contents. This wrapper owns the finite
+   height and scrolling instead. */
+.chore-scroll-frame {
+  min-width: 0;
+}
+
 @media (min-width: 900px) and (orientation: landscape) {
   .chores-page .chore-main-panel {
+    min-height: 0;
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
     overflow: hidden;
   }
 
-  .chores-page .chore-list {
-    /* Rows keep a readable/touchable height instead of being squeezed to fit. */
-    flex: 1 1 auto;
+  .chores-page .chore-scroll-frame {
+    position: relative;
     min-height: 0;
-    display: grid;
-    grid-auto-rows: minmax(72px, auto);
-    align-content: start;
+    height: 100%;
     overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    overflow-y: scroll;
+    overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-y;
     scrollbar-gutter: stable;
-    padding-right: 3px;
+    scrollbar-width: auto;
+    scrollbar-color: rgba(124,117,151,.72) rgba(40,49,65,.08);
+    background: rgba(255,255,255,.12);
+  }
+
+  .chores-page .chore-scroll-frame:focus-visible {
+    outline: 2px solid rgba(124,117,151,.48);
+    outline-offset: -2px;
+  }
+
+  .chores-page .chore-list {
+    min-height: max-content;
+    height: auto;
+    display: grid;
+    grid-auto-rows: auto;
+    align-content: start;
+    overflow: visible !important;
+    padding-right: 2px;
   }
 
   .chores-page .chore-row {
-    min-height: 72px;
+    min-height: 76px;
     height: auto;
+    flex-shrink: 0;
     align-items: center;
   }
 
   .chores-page .chore-panel-actions {
     position: relative;
-    z-index: 2;
-    background: rgba(255, 253, 248, .96);
-    border-top: 1px solid rgba(56,57,49,.08);
+    z-index: 3;
+    flex: none;
+    background: rgba(255,253,248,.98);
+    border-top: 1px solid rgba(56,57,49,.1);
   }
 
-  .chores-page .chore-list::-webkit-scrollbar {
-    width: 10px;
+  .chores-page .chore-scroll-frame::-webkit-scrollbar {
+    width: 12px;
   }
-  .chores-page .chore-list::-webkit-scrollbar-track {
-    background: rgba(40, 49, 65, .06);
-    border-radius: 999px;
+  .chores-page .chore-scroll-frame::-webkit-scrollbar-track {
+    background: rgba(40,49,65,.08);
+    border-left: 1px solid rgba(56,57,49,.05);
   }
-  .chores-page .chore-list::-webkit-scrollbar-thumb {
-    background: rgba(124, 117, 151, .48);
-    border: 2px solid transparent;
+  .chores-page .chore-scroll-frame::-webkit-scrollbar-thumb {
+    min-height: 42px;
+    background: rgba(124,117,151,.7);
+    border: 3px solid transparent;
     background-clip: padding-box;
     border-radius: 999px;
+  }
+  .chores-page .chore-scroll-frame::-webkit-scrollbar-thumb:hover {
+    background: rgba(124,117,151,.9);
+    border: 3px solid transparent;
+    background-clip: padding-box;
   }
 }
 
 @media (min-width: 900px) and (orientation: landscape) and (max-height: 720px) {
-  .chores-page .chore-list {
-    grid-auto-rows: minmax(64px, auto);
-  }
   .chores-page .chore-row {
-    min-height: 64px;
+    min-height: 68px;
+  }
+}
+
+/* Phones / portrait tablets use normal page scrolling, so the wrapper must not
+   introduce a nested scroll area there. */
+@media (max-width: 899px), (orientation: portrait) {
+  .chores-page .chore-scroll-frame {
+    overflow: visible;
+    height: auto;
   }
 }
